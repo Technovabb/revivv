@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revivv — Staff</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#4189DE; --blue-lt:#6BACED; --bg:#000; --panel:#0D0D0D; --raised:#171717;
+  --white:#FFF; --muted:#CCC; --dim:#777; --line:rgba(204,204,204,.16);
+  --green:#3FBF6E; --red:#FF6B6B;
+  --title:"Helvetica Now Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --body:"Poppins",-apple-system,Segoe UI,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--white);font-family:var(--body);line-height:1.5;
+  -webkit-font-smoothing:antialiased;padding-bottom:4rem}
+.wrap{width:min(760px,94vw);margin-inline:auto}
+
+header{border-bottom:1px solid var(--line);padding:1rem 0;position:sticky;top:0;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(12px);z-index:20}
+.hd{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.hd h1{font-family:var(--title);text-transform:uppercase;font-size:1.05rem;letter-spacing:.02em}
+.hd h1 span{color:var(--blue)}
+.who{font-size:.75rem;color:var(--dim)}
+.link{background:none;border:none;color:var(--muted);font-family:var(--body);font-size:.75rem;
+  text-decoration:underline;cursor:pointer;padding:0}
+.link:hover{color:var(--blue)}
+
+.btn{font-family:var(--body);font-weight:600;font-size:.85rem;border:1px solid transparent;
+  border-radius:99px;padding:.75rem 1.4rem;cursor:pointer;transition:.15s}
+.btn-primary{background:var(--blue);color:var(--white)}
+.btn-primary:hover{background:var(--blue-lt)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* sign in */
+.gate{max-width:380px;margin:5rem auto;text-align:center}
+.gate h2{font-family:var(--title);text-transform:uppercase;margin-bottom:.5rem}
+.gate p{color:var(--muted);font-size:.9rem;margin-bottom:1.6rem}
+input[type=email],input[type=text],input[type=password],input[type=date]{width:100%;background:var(--panel);
+  border:1px solid var(--line);border-radius:9px;padding:.85rem 1rem;color:var(--white);
+  font-family:var(--body);font-size:1rem;margin-bottom:.9rem}
+input:focus{outline:2px solid var(--blue);border-color:transparent}
+.msg{font-size:.85rem;min-height:1.3em;margin:.6rem 0}
+.msg.err{color:var(--red)}
+.msg.ok{color:var(--blue)}
+.hide{display:none !important}
+.pwrap{position:relative;display:flex}
+.pwrap input{padding-right:3rem}
+.peye{position:absolute;right:.5rem;top:calc(50% - .45rem);transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;padding:.45rem;color:var(--muted);display:flex}
+.peye:hover{color:var(--blue)}
+.peye svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* day nav */
+.daynav{display:flex;align-items:center;gap:.7rem;margin:1.8rem 0 1.2rem}
+.daynav button{width:40px;height:40px;border-radius:10px;background:var(--panel);
+  border:1px solid var(--line);color:var(--white);font-size:1rem;cursor:pointer}
+.daynav button:hover{border-color:var(--blue);color:var(--blue)}
+.daynav strong{font-family:var(--title);text-transform:uppercase;font-size:1.1rem;flex:1}
+.daynav .today{font-size:.75rem;padding:.5rem .9rem;width:auto;border-radius:99px}
+
+.tally{display:flex;gap:1.6rem;padding:.9rem 0 1.4rem;border-bottom:1px solid var(--line);
+  font-size:.8rem;color:var(--dim)}
+.tally b{display:block;color:var(--white);font-size:1.25rem;font-weight:600}
+
+/* jobs */
+.job{border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  padding:1.1rem 1.2rem;margin-top:.9rem}
+.job.done{opacity:.5}
+.job.cancelled{opacity:.4}
+.job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.slot{font-family:var(--title);text-transform:uppercase;color:var(--blue);
+  font-size:.78rem;letter-spacing:.08em}
+.job h3{font-family:var(--title);text-transform:uppercase;font-size:1.15rem;margin:.15rem 0 .1rem}
+.pkg{font-size:.9rem;color:var(--muted)}
+.money{font-size:1.35rem;font-weight:600;white-space:nowrap}
+.tag{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;border-radius:99px;
+  padding:.25rem .6rem;border:1px solid var(--line);color:var(--dim)}
+.tag.done{color:var(--green);border-color:var(--green)}
+.tag.cancelled{color:var(--red);border-color:var(--red)}
+
+.rows{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--line);display:grid;gap:.35rem}
+.row{display:flex;gap:.8rem;font-size:.85rem}
+.row span:first-child{color:var(--dim);min-width:5.5rem;flex:none}
+.row a{color:var(--blue-lt)}
+.note{background:var(--raised);border-radius:8px;padding:.6rem .8rem;margin-top:.7rem;
+  font-size:.85rem;color:var(--muted)}
+
+.acts{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+.acts button{flex:1;min-width:130px;padding:.8rem;border-radius:10px;font-weight:600;
+  font-size:.85rem;cursor:pointer;font-family:var(--body);border:1px solid var(--line);
+  background:var(--raised);color:var(--white)}
+.acts .done-btn{background:var(--green);border-color:var(--green);color:#00250F}
+.acts .done-btn:hover{filter:brightness(1.1)}
+.acts .cancel-btn:hover{border-color:var(--red);color:var(--red)}
+.acts button:disabled{opacity:.4;cursor:not-allowed}
+
+/* view toggle */
+.vtoggle{display:flex;gap:.4rem;margin:1.4rem 0 .2rem}
+.vtoggle button{padding:.45rem 1.1rem;border-radius:99px;background:var(--panel);
+  border:1px solid var(--line);color:var(--muted);font-family:var(--body);
+  font-size:.78rem;font-weight:600;cursor:pointer}
+.vtoggle button.on{background:var(--blue);border-color:var(--blue);color:var(--white)}
+
+/* week grid */
+.wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:1rem}
+.wcol{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:.5rem .45rem;min-height:130px;display:flex;flex-direction:column;gap:4px}
+.wcol.today{border-color:var(--blue)}
+.wcol.past{opacity:.5}
+.whead{text-align:center;padding-bottom:.35rem;border-bottom:1px solid var(--line);
+  margin-bottom:.2rem;cursor:pointer}
+.whead .dw{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.whead .dn{font-size:1.05rem;font-weight:600}
+.wcol.today .whead .dn{color:var(--blue)}
+.wjob{background:rgba(65,137,222,.16);border-left:2px solid var(--blue);border-radius:5px;
+  padding:.3rem .4rem;font-size:.62rem;line-height:1.35;cursor:pointer}
+.wjob.done{background:rgba(63,191,110,.14);border-left-color:var(--green)}
+.wjob.cancelled{background:rgba(255,107,107,.12);border-left-color:var(--red);opacity:.6}
+.wjob b{display:block;font-weight:600;font-size:.66rem;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.wjob span{color:var(--dim);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wempty{font-size:.58rem;color:var(--dim);text-align:center;padding:.6rem 0}
+@media(max-width:720px){
+  .wgrid{grid-template-columns:1fr}
+  .wcol{min-height:0;flex-direction:column}
+  .whead{display:flex;gap:.5rem;align-items:baseline;text-align:left;justify-content:flex-start}
+  .whead .dn{font-size:.95rem}
+  .wjob{font-size:.72rem}
+  .wjob b{font-size:.78rem}
+}
+
+/* month grid */
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:1rem}
+.mdow{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+  text-align:center;padding-bottom:.3rem}
+.mcell{min-height:74px;border-radius:9px;background:var(--panel);border:1px solid var(--line);
+  padding:.35rem .4rem;cursor:pointer;display:flex;flex-direction:column;gap:2px;
+  text-align:left;font-family:var(--body);color:var(--white);transition:.12s}
+.mcell:hover{border-color:var(--blue)}
+.mcell.blank{background:transparent;border:none;cursor:default;min-height:0}
+.mcell.past{opacity:.45}
+.mcell.today{border-color:var(--blue)}
+.mcell .n{font-size:.72rem;color:var(--dim);font-weight:600}
+.mcell.today .n{color:var(--blue)}
+.mjob{font-size:.58rem;line-height:1.35;border-radius:4px;padding:1px 4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:rgba(65,137,222,.22);color:var(--blue-lt)}
+.mjob.done{background:rgba(63,191,110,.18);color:var(--green)}
+.mjob.cancelled{background:rgba(255,107,107,.15);color:var(--red);text-decoration:line-through}
+.mmore{font-size:.55rem;color:var(--dim);padding-left:4px}
+@media(max-width:560px){
+  .mcell{min-height:52px}
+  .mjob{font-size:0;height:5px;padding:0;border-radius:99px}
+  .mmore{display:none}
+}
+
+/* tabs */
+.tabs{display:flex;gap:.5rem;margin:1.6rem 0 0}
+.tabs button{flex:1;padding:.7rem;border-radius:10px;background:var(--panel);
+  border:1px solid var(--line);color:var(--muted);font-family:var(--body);
+  font-size:.85rem;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--blue);border-color:var(--blue);color:var(--white)}
+
+/* customer cards */
+.cust{border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  padding:1.1rem 1.2rem;margin-top:.9rem}
+.cust-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.cust h3{font-family:var(--title);text-transform:uppercase;font-size:1.1rem}
+.cust .sub{font-size:.8rem;color:var(--dim)}
+.badge{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;border-radius:99px;
+  padding:.25rem .7rem;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+.badge[data-t="Silver"]{color:#CCC;border-color:#CCC}
+.badge[data-t="Gold"]{color:#FFC65C;border-color:#FFC65C}
+.stamprow{display:flex;gap:.35rem;margin:.9rem 0 .6rem}
+.st{flex:1;height:26px;border-radius:99px;border:1px dashed var(--line)}
+.st.on{border:1px solid var(--blue);background:rgba(65,137,222,.2)}
+.st.free{border:1px solid #FFC65C;background:rgba(255,198,92,.15)}
+.stats{display:flex;gap:1.4rem;font-size:.78rem;color:var(--dim);flex-wrap:wrap}
+.stats b{color:var(--white);font-weight:600}
+.next{background:var(--raised);border-radius:8px;padding:.55rem .8rem;margin-top:.7rem;
+  font-size:.82rem;color:var(--blue-lt)}
+.due{color:#FFC65C}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--dim);font-size:.9rem}
+.warn{background:rgba(255,107,107,.1);border:1px solid var(--red);border-radius:10px;
+  padding:.9rem 1rem;font-size:.85rem;color:var(--red);margin-top:1rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <h1><a href="index.html" style="color:inherit;text-decoration:none">Revivv <span>· Staff</span></a></h1>
+    <div id="hdRight"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- sign in -->
+  <section class="gate" id="gate">
+    <h2>Staff sign in</h2>
+    <p>Use the email and password set up for you in Supabase.</p>
+    <input id="email" type="email" placeholder="your@email.com" autocomplete="username">
+    <span class="pwrap">
+      <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
+      <button type="button" class="peye" id="staffEye" aria-label="Show password">
+        <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </span>
+    <p class="msg" id="gateMsg"></p>
+    <button class="btn btn-primary" id="gateBtn" style="width:100%">Sign in</button>
+  </section>
+
+  <!-- signed in -->
+  <div id="board" class="hide">
+    <div class="tabs">
+      <button id="tabDay" class="on">Today's jobs</button>
+      <button id="tabCust">Customers</button>
+    </div>
+
+  <!-- day view -->
+  <section id="dayView">
+    <div class="vtoggle">
+      <button id="vDay" class="on">Day</button>
+      <button id="vWeek">Week</button>
+      <button id="vMonth">Month</button>
+    </div>
+
+    <div id="dayPane">
+    <div class="daynav">
+      <button id="prev" aria-label="Previous day">‹</button>
+      <strong id="dayLabel">—</strong>
+      <button class="today" id="todayBtn">Today</button>
+      <button id="next" aria-label="Next day">›</button>
+    </div>
+    <input type="date" id="datePick">
+
+    <div class="tally">
+      <div><b id="tJobs">0</b>jobs</div>
+      <div><b id="tDone">0</b>done</div>
+      <div><b id="tMoney">$0</b>booked</div>
+    </div>
+
+    <div id="jobs"></div>
+    </div>
+
+    <div id="weekPane" class="hide">
+      <div class="daynav">
+        <button id="wPrev" aria-label="Previous week">‹</button>
+        <strong id="wLabel">—</strong>
+        <button class="today" id="wThis">This week</button>
+        <button id="wNext" aria-label="Next week">›</button>
+      </div>
+      <div class="tally">
+        <div><b id="wJobs">0</b>jobs</div>
+        <div><b id="wDone">0</b>done</div>
+        <div><b id="wMoney">$0</b>booked</div>
+      </div>
+      <div class="wgrid" id="wGrid"></div>
+      <p class="empty" style="padding:1.2rem 0 0;font-size:.75rem">Tap a day or a job to open it.</p>
+    </div>
+
+    <div id="monthPane" class="hide">
+      <div class="daynav">
+        <button id="mPrev" aria-label="Previous month">‹</button>
+        <strong id="mLabel">—</strong>
+        <button class="today" id="mToday">This month</button>
+        <button id="mNext" aria-label="Next month">›</button>
+      </div>
+      <div class="tally">
+        <div><b id="mJobs">0</b>jobs</div>
+        <div><b id="mDone">0</b>done</div>
+        <div><b id="mMoney">$0</b>booked</div>
+      </div>
+      <div class="mgrid" id="mGrid"></div>
+      <p class="empty" style="padding:1.2rem 0 0;font-size:.75rem">Tap any day to open it.</p>
+    </div>
+  </section>
+
+  <!-- customers -->
+  <section id="custView" class="hide">
+    <input type="text" id="custSearch" placeholder="Search name, phone or email" style="margin-top:1.4rem">
+    <div id="custList"></div>
+  </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ===== YOUR TWO KEYS — the same two as index.html ===== */
+const SUPABASE_URL      = "https://mikotrcqvkfgvcnghskn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Eq-EhSVu-ph3DisH5pbKuw_40jOYDzp";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const SLOT_LABEL = {
+  priority:"Priority · 7–9am", morning:"Morning · 8am–12pm",
+  afternoon:"Afternoon · 12–4pm", late:"Late · 4–6pm"
+};
+
+const gate    = document.getElementById("gate");
+const board   = document.getElementById("board");
+const emailIn = document.getElementById("email");
+const passIn  = document.getElementById("pass");
+const gateBtn = document.getElementById("gateBtn");
+const gateMsg = document.getElementById("gateMsg");
+const jobsEl  = document.getElementById("jobs");
+const datePick= document.getElementById("datePick");
+
+let day = new Date();
+
+const isoOf  = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const pretty = d => d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+
+/* ---------- sign in ----------
+   Password, not an emailed code. Staff are a handful of known people with
+   accounts you created by hand — there's no reason to make them wait on email,
+   and it means the crew can sign in with no mail service configured at all. */
+async function gateAction(){
+  gateMsg.className = "msg"; gateMsg.textContent = "";
+  gateBtn.disabled = true; gateBtn.textContent = "Signing in…";
+  try{
+    const { error } = await sb.auth.signInWithPassword({
+      email: emailIn.value.trim(),
+      password: passIn.value
+    });
+    if (error) throw new Error("Wrong email or password.");
+    await enter();
+  } catch(err){
+    gateMsg.className = "msg err";
+    gateMsg.textContent = err.message;
+  } finally {
+    gateBtn.disabled = false; gateBtn.textContent = "Sign in";
+  }
+}
+
+gateBtn.addEventListener("click", gateAction);
+
+const EYE_OPEN   = '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+const EYE_CLOSED = '<path d="M2 12s3.6-7 10-7c2 0 3.7.7 5.1 1.6M22 12s-3.6 7-10 7c-2 0-3.7-.7-5.1-1.6"/><path d="m3 3 18 18"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
+document.getElementById("staffEye").addEventListener("click", e => {
+  const btn = e.currentTarget, hidden = passIn.type === "password";
+  passIn.type = hidden ? "text" : "password";
+  btn.querySelector("svg").innerHTML = hidden ? EYE_CLOSED : EYE_OPEN;
+  btn.setAttribute("aria-label", hidden ? "Hide password" : "Show password");
+  passIn.focus();
+});
+emailIn.addEventListener("keydown", e => { if (e.key === "Enter") passIn.focus(); });
+passIn .addEventListener("keydown", e => { if (e.key === "Enter") gateAction(); });
+
+/* Being in the staff table is the ONLY thing that makes someone staff. */
+async function enter(){
+  const { data: staffRow } = await sb.from("staff").select("name").maybeSingle();
+  if (!staffRow){
+    gateMsg.className = "msg err";
+    gateMsg.textContent = "That account isn't staff. Ask to be added.";
+    await sb.auth.signOut();
+    return;
+  }
+  gate.classList.add("hide");
+  board.classList.remove("hide");
+  document.getElementById("hdRight").innerHTML =
+    `<span class="who">${staffRow.name || "Staff"}</span> · <button class="link" id="out">Sign out</button>`;
+  document.getElementById("out").addEventListener("click", async () => {
+    await sb.auth.signOut(); location.reload();
+  });
+  load();
+}
+
+/* ---------- the day's jobs ---------- */
+async function load(){
+  const iso = isoOf(day);
+  document.getElementById("dayLabel").textContent = pretty(day);
+  datePick.value = iso;
+  jobsEl.innerHTML = `<p class="empty">Loading…</p>`;
+
+  const { data, error } = await sb.rpc("staff_day", { d: iso });
+  if (error){
+    jobsEl.innerHTML = `<div class="warn">Couldn't load: ${error.message}</div>`;
+    return;
+  }
+
+  const jobs  = data || [];
+  const live  = jobs.filter(j => j.status !== "cancelled");
+  const done  = jobs.filter(j => j.status === "completed");
+  const money = live.reduce((s,j) => s + Number(j.total), 0);
+
+  document.getElementById("tJobs").textContent  = live.length;
+  document.getElementById("tDone").textContent  = done.length;
+  document.getElementById("tMoney").textContent = "$" + money.toFixed(0);
+
+  if (!jobs.length){
+    jobsEl.innerHTML = `<p class="empty">Nothing booked.</p>`;
+    return;
+  }
+
+  jobsEl.innerHTML = jobs.map(j => {
+    const isDone = j.status === "completed";
+    const isOff  = j.status === "cancelled";
+    const cls    = isDone ? " done" : isOff ? " cancelled" : "";
+    const tag    = isDone ? `<span class="tag done">Done</span>`
+                 : isOff  ? `<span class="tag cancelled">Cancelled</span>`
+                 : `<span class="tag">${j.status}</span>`;
+    const maps   = j.address
+      ? `<a href="https://maps.google.com/?q=${encodeURIComponent(j.address + ", " + (j.parish||"") + ", Barbados")}" target="_blank" rel="noopener">${j.address}</a>`
+      : "—";
+
+    return `<article class="job${cls}" data-id="${j.id}">
+      <div class="job-top">
+        <div>
+          <p class="slot">${SLOT_LABEL[j.slot] || j.slot}</p>
+          <h3>${j.name}</h3>
+          <p class="pkg">${j.package}${j.addons ? " + " + j.addons : ""}</p>
+        </div>
+        <div style="text-align:right">
+          <p class="money">$${Number(j.total).toFixed(0)}</p>
+          ${tag}
+        </div>
+      </div>
+      <div class="rows">
+        <p class="row"><span>Phone</span><a href="tel:${j.phone}">${j.phone}</a></p>
+        <p class="row"><span>Vehicle</span><span>${j.vehicle || "—"}</span></p>
+        <p class="row"><span>Where</span><span>${j.location || "—"}${j.parish ? " · " + j.parish : ""}</span></p>
+        <p class="row"><span>Address</span><span>${maps}</span></p>
+      </div>
+      ${j.notes ? `<p class="note">${j.notes}</p>` : ""}
+      ${(isDone || isOff) ? "" : `
+      <div class="acts">
+        <button class="done-btn"   data-act="complete" data-id="${j.id}">Mark complete</button>
+        <button class="cancel-btn" data-act="cancel"   data-id="${j.id}">Cancel</button>
+      </div>`}
+    </article>`;
+  }).join("");
+}
+
+/* Marking complete is what awards the stamp — a finished job, not a booking.
+   Otherwise people farm free washes with bookings they never turn up to. */
+jobsEl.addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const { act, id } = btn.dataset;
+
+  if (act === "cancel" && !confirm("Cancel this booking? The slot goes back on sale.")) return;
+  if (act === "complete" && !confirm("Mark complete? This awards the customer their stamp.")) return;
+
+  btn.disabled = true;
+  btn.textContent = "…";
+  const fn = act === "complete" ? "complete_booking" : "cancel_booking";
+  const { error } = await sb.rpc(fn, { p_booking: id });
+  if (error){ alert(error.message); btn.disabled = false; }
+  load();
+});
+
+/* ---------- month view ---------- */
+const dayPane   = document.getElementById("dayPane");
+const weekPane  = document.getElementById("weekPane");
+const monthPane = document.getElementById("monthPane");
+const vDay      = document.getElementById("vDay");
+const vWeek     = document.getElementById("vWeek");
+const vMonth    = document.getElementById("vMonth");
+const wGrid     = document.getElementById("wGrid");
+const mGrid     = document.getElementById("mGrid");
+
+let wDate = new Date();   // any day inside the week being shown
+let mDate = new Date();   // any day inside the month being shown
+
+const SLOT_SHORT = { priority:"7–9am", morning:"8–12", afternoon:"12–4", late:"4–6" };
+
+function showView(which){
+  dayPane  .classList.toggle("hide", which !== "day");
+  weekPane .classList.toggle("hide", which !== "week");
+  monthPane.classList.toggle("hide", which !== "month");
+  vDay  .classList.toggle("on", which === "day");
+  vWeek .classList.toggle("on", which === "week");
+  vMonth.classList.toggle("on", which === "month");
+  if (which === "week")  loadWeek();
+  if (which === "month") loadMonth();
+}
+vDay  .addEventListener("click", () => showView("day"));
+vWeek .addEventListener("click", () => showView("week"));
+vMonth.addEventListener("click", () => showView("month"));
+
+/* Monday of whatever week the given date falls in */
+function mondayOf(d){
+  const m = new Date(d);
+  m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+  m.setHours(0,0,0,0);
+  return m;
+}
+
+async function loadWeek(){
+  const mon = mondayOf(wDate);
+  const sun = new Date(mon); sun.setDate(sun.getDate() + 6);
+
+  document.getElementById("wLabel").textContent =
+    mon.getMonth() === sun.getMonth()
+      ? `${mon.getDate()}–${sun.getDate()} ${mon.toLocaleDateString("en-GB",{month:"long"})}`
+      : `${mon.getDate()} ${mon.toLocaleDateString("en-GB",{month:"short"})} – ${sun.getDate()} ${sun.toLocaleDateString("en-GB",{month:"short"})}`;
+
+  wGrid.innerHTML = `<p class="empty" style="grid-column:1/-1">Loading…</p>`;
+
+  const { data, error } = await sb.rpc("staff_range", { d_from: isoOf(mon), d_to: isoOf(sun) });
+  if (error){
+    wGrid.innerHTML = `<div class="warn" style="grid-column:1/-1">${error.message}</div>`;
+    return;
+  }
+
+  const byDay = {};
+  (data || []).forEach(j => (byDay[j.booking_date] ||= []).push(j));
+
+  const live = (data||[]).filter(j => j.status !== "cancelled");
+  document.getElementById("wJobs").textContent  = live.length;
+  document.getElementById("wDone").textContent  = (data||[]).filter(j => j.status === "completed").length;
+  document.getElementById("wMoney").textContent = "$" + live.reduce((s,j) => s + Number(j.total), 0).toFixed(0);
+
+  const todayIso = isoOf(new Date());
+  let out = "";
+
+  for (let i = 0; i < 7; i++){
+    const d    = new Date(mon); d.setDate(d.getDate() + i);
+    const iso  = isoOf(d);
+    const jobs = byDay[iso] || [];
+    const cls  = ["wcol"];
+    if (iso === todayIso) cls.push("today");
+    if (iso <  todayIso)  cls.push("past");
+
+    const body = jobs.length
+      ? jobs.map(j => `<div class="wjob ${j.status === "completed" ? "done" : j.status === "cancelled" ? "cancelled" : ""}" data-iso="${iso}">
+            <b>${j.name}</b>
+            <span>${SLOT_SHORT[j.slot] || j.slot} · $${Number(j.total).toFixed(0)}</span>
+          </div>`).join("")
+      : `<p class="wempty">—</p>`;
+
+    out += `<div class="${cls.join(" ")}">
+        <div class="whead" data-iso="${iso}">
+          <p class="dw">${d.toLocaleDateString("en-GB",{weekday:"short"})}</p>
+          <p class="dn">${d.getDate()}</p>
+        </div>
+        ${body}
+      </div>`;
+  }
+  wGrid.innerHTML = out;
+}
+
+wGrid.addEventListener("click", e => {
+  const hit = e.target.closest("[data-iso]");
+  if (!hit) return;
+  day = new Date(hit.dataset.iso + "T00:00:00");
+  showView("day");
+  load();
+});
+
+document.getElementById("wPrev").addEventListener("click", () => {
+  wDate.setDate(wDate.getDate() - 7); loadWeek();
+});
+document.getElementById("wNext").addEventListener("click", () => {
+  wDate.setDate(wDate.getDate() + 7); loadWeek();
+});
+document.getElementById("wThis").addEventListener("click", () => {
+  wDate = new Date(); loadWeek();
+});
+
+async function loadMonth(){
+  const y = mDate.getFullYear(), m = mDate.getMonth();
+  const first = new Date(y, m, 1);
+  const last  = new Date(y, m + 1, 0);
+  document.getElementById("mLabel").textContent =
+    first.toLocaleDateString("en-GB",{month:"long", year:"numeric"});
+
+  mGrid.innerHTML = `<p class="empty" style="grid-column:1/-1">Loading…</p>`;
+
+  const { data, error } = await sb.rpc("staff_range", {
+    d_from: isoOf(first), d_to: isoOf(last)
+  });
+  if (error){
+    mGrid.innerHTML = `<div class="warn" style="grid-column:1/-1">${error.message}</div>`;
+    return;
+  }
+
+  /* group by date so each cell only walks its own jobs */
+  const byDay = {};
+  (data || []).forEach(j => (byDay[j.booking_date] ||= []).push(j));
+
+  const live  = (data||[]).filter(j => j.status !== "cancelled");
+  const done  = (data||[]).filter(j => j.status === "completed");
+  document.getElementById("mJobs").textContent  = live.length;
+  document.getElementById("mDone").textContent  = done.length;
+  document.getElementById("mMoney").textContent =
+    "$" + live.reduce((s,j) => s + Number(j.total), 0).toFixed(0);
+
+  const todayIso = isoOf(new Date());
+  const offset   = (first.getDay() + 6) % 7;          // Monday-first
+  let cells = ["Mo","Tu","We","Th","Fr","Sa","Su"].map(d => `<div class="mdow">${d}</div>`).join("");
+
+  for (let i = 0; i < offset; i++) cells += `<div class="mcell blank"></div>`;
+
+  for (let d = 1; d <= last.getDate(); d++){
+    const iso  = isoOf(new Date(y, m, d));
+    const jobs = byDay[iso] || [];
+    const cls  = ["mcell"];
+    if (iso === todayIso) cls.push("today");
+    if (iso < todayIso)   cls.push("past");
+
+    const shown = jobs.slice(0,3).map(j =>
+      `<span class="mjob ${j.status === "completed" ? "done" : j.status === "cancelled" ? "cancelled" : ""}">${j.name.split(" ")[0]}</span>`
+    ).join("");
+    const more = jobs.length > 3 ? `<span class="mmore">+${jobs.length - 3}</span>` : "";
+
+    cells += `<button class="${cls.join(" ")}" data-iso="${iso}">
+                <span class="n">${d}</span>${shown}${more}
+              </button>`;
+  }
+  mGrid.innerHTML = cells;
+}
+
+/* tapping a day drops you into the day view for it */
+mGrid.addEventListener("click", e => {
+  const cell = e.target.closest(".mcell");
+  if (!cell || cell.classList.contains("blank")) return;
+  day = new Date(cell.dataset.iso + "T00:00:00");
+  showView("day");
+  load();
+});
+
+document.getElementById("mPrev").addEventListener("click", () => {
+  mDate.setMonth(mDate.getMonth() - 1); loadMonth();
+});
+document.getElementById("mNext").addEventListener("click", () => {
+  mDate.setMonth(mDate.getMonth() + 1); loadMonth();
+});
+document.getElementById("mToday").addEventListener("click", () => {
+  mDate = new Date(); loadMonth();
+});
+
+/* ---------- customers ---------- */
+const custSearch = document.getElementById("custSearch");
+const custList   = document.getElementById("custList");
+const dayView    = document.getElementById("dayView");
+const custView   = document.getElementById("custView");
+const tabDay     = document.getElementById("tabDay");
+const tabCust    = document.getElementById("tabCust");
+
+function showTab(which){
+  const day = which === "day";
+  dayView.classList.toggle("hide", !day);
+  custView.classList.toggle("hide", day);
+  tabDay.classList.toggle("on", day);
+  tabCust.classList.toggle("on", !day);
+  if (!day && !custList.innerHTML) findCustomers("");
+}
+tabDay .addEventListener("click", () => showTab("day"));
+tabCust.addEventListener("click", () => showTab("cust"));
+
+const SLOT_TIME = {
+  priority:"7–9am", morning:"8am–12pm", afternoon:"12–4pm", late:"4–6pm"
+};
+
+/* Reminders are tap-to-send, not automated. For a small crew that's better:
+   the message opens pre-written, you read it, you send it. Nothing can go
+   out by mistake, and it costs nothing to run. */
+function reminderText(c){
+  if (c.next_date){
+    const d = new Date(c.next_date + "T00:00:00")
+      .toLocaleDateString("en-GB",{weekday:"long", day:"numeric", month:"long"});
+    return `Hi ${c.name.split(" ")[0]}, this is Revivv — just confirming your detail on ${d}, ${SLOT_TIME[c.next_slot] || ""}. Anything you need us to know about the vehicle, let us know. See you then!`;
+  }
+  const left = 6 - c.stamps;
+  if (c.stamps >= 5)
+    return `Hi ${c.name.split(" ")[0]}, this is Revivv — you've earned 50% off your next detail — any package. Book in whenever suits.`;
+  if (c.stamps > 0)
+    return `Hi ${c.name.split(" ")[0]}, this is Revivv — you're ${left} detail${left===1?"":"s"} away from 50% off. Want to get booked in?`;
+  return `Hi ${c.name.split(" ")[0]}, this is Revivv — it's been a while since we last had your vehicle in. Want to get something booked?`;
+}
+
+async function findCustomers(q){
+  custList.innerHTML = `<p class="empty">Searching…</p>`;
+  const { data, error } = await sb.rpc("staff_find_customers", { q });
+  if (error){
+    custList.innerHTML = `<div class="warn">${error.message}</div>`;
+    return;
+  }
+  const list = data || [];
+  if (!list.length){
+    custList.innerHTML = `<p class="empty">${q ? "No one matching that." : "No customers yet."}</p>`;
+    return;
+  }
+
+  custList.innerHTML = list.map(c => {
+    const msg   = encodeURIComponent(reminderText(c));
+    const wa    = c.phone.replace(/\D/g,"").replace(/^(?!1)/, "1");   // Barbados: +1
+    const stamps = Array.from({length:6},(_,i) =>
+      `<span class="st${i < c.stamps ? " on" : i===5 ? " free" : ""}"></span>`).join("");
+
+    const next = c.next_date
+      ? `<p class="next">Booked — ${new Date(c.next_date+"T00:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}, ${SLOT_TIME[c.next_slot]||c.next_slot}</p>`
+      : c.stamps >= 5
+        ? `<p class="next due">50% off earned — worth a nudge.</p>`
+        : "";
+
+    return `<article class="cust">
+      <div class="cust-top">
+        <div>
+          <h3>${c.name}</h3>
+          <p class="sub">${c.phone} · ${c.email}</p>
+        </div>
+        <span class="badge" data-t="${c.tier}">${c.tier}</span>
+      </div>
+
+      <div class="stamprow">${stamps}</div>
+
+      <div class="stats">
+        <span><b>${c.stamps}/6</b> stamps</span>
+        <span><b>${c.visits}</b> visits (12mo)</span>
+        <span><b>$${Number(c.credit).toFixed(0)}</b> credit</span>
+        <span><b>${c.last_visit ? new Date(c.last_visit+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : "—"}</b> last in</span>
+      </div>
+
+      ${next}
+
+      <div class="acts">
+        <button onclick="location.href='tel:${c.phone}'">Call</button>
+        <button onclick="window.open('https://wa.me/${wa}?text=${msg}','_blank')">WhatsApp</button>
+        <button onclick="location.href='mailto:${c.email}?subject=${encodeURIComponent("Revivv Vehicle Detailing")}&body=${msg}'">Email</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+let searchTimer;
+custSearch.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => findCustomers(custSearch.value.trim()), 300);
+});
+
+/* ---------- date nav ---------- */
+function shift(n){ day.setDate(day.getDate() + n); load(); }
+document.getElementById("prev").addEventListener("click", () => shift(-1));
+document.getElementById("next").addEventListener("click", () => shift(1));
+document.getElementById("todayBtn").addEventListener("click", () => { day = new Date(); load(); });
+datePick.addEventListener("change", () => {
+  if (datePick.value){ day = new Date(datePick.value + "T00:00:00"); load(); }
+});
+
+/* already signed in? go straight in */
+(async () => {
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) enter();
+})();
+</script>
+</body>
+</html>
