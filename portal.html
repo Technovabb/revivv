@@ -338,7 +338,7 @@ textarea{resize:vertical;min-height:80px}
     <p class="msg" id="bookMsg" role="status" aria-live="polite"></p>
     <button class="btn btn-primary" id="bookBtn" style="width:100%">Send booking request</button>
 
-    <p class="foot-link"><a href="index.html">View the full Revivv site →</a></p>
+    <p class="foot-link"><a href="index.html">View the full Revivv site →</a><br><span style="color:#333;font-size:.7rem">v1.0.0</span></p>
   </section>
 </main>
 
@@ -610,6 +610,33 @@ bookBtn.addEventListener("click",async()=>{
   }catch(err){bookMsg.className="msg err";bookMsg.textContent=err.message;if(selectedISO)renderSlots(selectedISO);}
   finally{bookBtn.disabled=false;}
 });
+
+/* ===== app auto-update =====
+   Registers the service worker and, when a new version is published,
+   activates it and reloads once — so an installed app is never stale.
+   Change APP_VERSION on every release; it also shows in the footer. */
+const APP_VERSION = "1.0.0";
+if ("serviceWorker" in navigator && location.protocol === "https:"){
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("sw.js");
+      // check for updates every time the app is opened
+      reg.update();
+      reg.addEventListener("updatefound", () => {
+        const nw = reg.installing;
+        nw && nw.addEventListener("statechange", () => {
+          if (nw.state === "installed" && navigator.serviceWorker.controller){
+            nw.postMessage("SKIP_WAITING");
+          }
+        });
+      });
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return; reloaded = true; location.reload();
+      });
+    } catch(err){ console.log("SW:", err); }
+  });
+}
 
 /* ---------- boot ---------- */
 renderCalendar();

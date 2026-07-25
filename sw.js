@@ -10,7 +10,7 @@
  *      would happily sell someone a slot that's already gone.
  */
 
-const VERSION = 'revivv-v5';        // bump this when you change index.html
+const VERSION = 'revivv-v6';        // bump this when you change index.html
 const SHELL = [
   './',
   './index.html',
@@ -37,6 +37,10 @@ self.addEventListener('activate', e => {
       ))
       .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', e => {
