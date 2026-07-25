@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revivv — My Rewards</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Revivv">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#4189DE; --blue-lt:#6BACED; --bg:#000; --panel:#0D0D0D; --raised:#151515;
+  --white:#F4F7F6; --muted:#CCC; --dim:#777; --line:rgba(204,204,204,.16);
+  --title:"Helvetica Now Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --body:"Poppins",-apple-system,Segoe UI,sans-serif; --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--body);line-height:1.55;
+  -webkit-font-smoothing:antialiased;padding-bottom:3rem}
+a{color:inherit}
+.wrap{width:min(560px,92vw);margin-inline:auto}
+.hide{display:none !important}
+.title{font-family:var(--title);text-transform:uppercase;letter-spacing:.01em;font-weight:700}
+
+header{position:sticky;top:0;z-index:30;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);padding:.9rem 0}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.hd .mark img{height:32px}
+.hd .out{font-family:var(--body);font-size:.72rem;color:var(--dim);text-decoration:underline;
+  background:none;border:none;cursor:pointer}
+
+.btn{font-family:var(--body);font-weight:600;font-size:.85rem;border:1px solid transparent;
+  border-radius:99px;padding:.85rem 1.5rem;cursor:pointer;transition:.15s;text-decoration:none;
+  display:inline-block;text-align:center}
+.btn-primary{background:var(--blue);color:var(--white)}
+.btn-primary:hover{background:var(--blue-lt)}
+.btn-ghost{border-color:var(--line);color:var(--white);background:transparent}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- sign in ---------- */
+.gate{margin:3rem auto 0;text-align:center}
+.gate h1{font-size:1.6rem;margin-bottom:.5rem}
+.gate p{color:var(--muted);font-size:.92rem;margin-bottom:1.8rem}
+.field{display:flex;flex-direction:column;gap:.45rem;margin-bottom:1rem;text-align:left}
+label{font-family:var(--body);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+input[type=text],input[type=tel],input[type=email],input[type=password],select,textarea{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:.85rem 1rem;color:var(--white);font-family:var(--body);font-size:1rem}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);border-color:transparent}
+textarea{resize:vertical;min-height:80px}
+.pwrap{position:relative;display:flex}
+.pwrap input{padding-right:3rem}
+.peye{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;border:none;
+  cursor:pointer;padding:.45rem;color:var(--muted);display:flex}
+.peye:hover{color:var(--blue)}
+.peye svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.msg{font-size:.83rem;min-height:1.2em;margin:.4rem 0}
+.msg.err{color:#FF6B6B}.msg.ok{color:var(--blue)}
+.link-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--body);
+  font-size:.75rem;text-decoration:underline;padding:0;margin-top:.4rem}
+.link-btn:hover{color:var(--blue)}
+
+/* ---------- account card ---------- */
+.acct{margin-top:1.6rem}
+.acct-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1rem}
+.acct-top h1{font-size:1.5rem}
+.acct-top .sub{color:var(--dim);font-size:.82rem}
+.badge{font-family:var(--body);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+  border-radius:99px;padding:.35rem .8rem;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge[data-t="silver"]{color:#C9D6DE;border-color:#C9D6DE}
+.badge[data-t="gold"]{color:#FFC65C;border-color:#FFC65C}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1.4rem;margin-bottom:1.1rem}
+.stamps{display:flex;gap:.5rem;margin:.2rem 0 1rem}
+.stamp{flex:1;aspect-ratio:1;border-radius:50%;border:1px dashed var(--line);display:flex;
+  align-items:center;justify-content:center;font-size:.72rem;color:var(--dim)}
+.stamp.on{border:1px solid var(--blue);background:rgba(65,137,222,.14);color:var(--blue)}
+.stamp.free{border:1px solid #FFC65C;background:rgba(255,198,92,.14);color:#FFC65C;font-size:.6rem}
+.stat{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);padding:.35rem 0}
+.stat b{color:var(--white);font-weight:600}
+.hint{font-size:.78rem;color:var(--dim);margin-top:.6rem;line-height:1.5}
+.ref{display:flex;align-items:center;justify-content:space-between;gap:.8rem;
+  border:1px dashed var(--blue);border-radius:10px;padding:.7rem .9rem;margin-top:.4rem}
+.ref code{color:var(--blue);font-size:.9rem;letter-spacing:.06em}
+.ref button{font-family:var(--body);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:.35rem .8rem;cursor:pointer}
+.ref button:hover{border-color:var(--blue);color:var(--blue)}
+.hist{display:grid;gap:.55rem}
+.hist .h{display:flex;justify-content:space-between;gap:1rem;font-size:.82rem;color:var(--muted)}
+.hist .h b{color:var(--white);font-weight:500}
+.sec-label{font-family:var(--title);text-transform:uppercase;font-size:1.05rem;margin:1.8rem 0 .8rem}
+
+/* ---------- quote ---------- */
+.opts{display:grid;gap:.6rem;margin-bottom:1rem}
+.opts.v3{grid-template-columns:repeat(3,1fr)}
+.opts.v2{grid-template-columns:repeat(2,1fr)}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer}
+.opt span{display:flex;flex-direction:column;gap:.2rem;height:100%;border:1px solid var(--line);
+  border-radius:10px;padding:.7rem .8rem;font-size:.88rem;font-weight:600;transition:.15s;background:var(--panel)}
+.opt em{font-style:normal;font-size:.68rem;color:var(--dim)}
+.opt input:checked + span{border-color:var(--blue);background:rgba(65,137,222,.1)}
+.opt input:checked + span em{color:var(--blue)}
+.qty{display:flex;align-items:center;gap:.5rem;margin-top:.3rem}
+.qty button{width:24px;height:24px;border-radius:6px;background:var(--raised);border:1px solid var(--line);
+  color:var(--white);cursor:pointer;font-size:.8rem}
+.qty output{font-size:.75rem;color:var(--blue);min-width:3.5em}
+.total{display:flex;align-items:baseline;justify-content:space-between;margin:1rem 0;
+  padding-top:1rem;border-top:1px dashed var(--line)}
+.total .lbl{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.total .amt{font-weight:700;font-size:2rem;color:var(--blue)}
+.total .amt sup{font-size:.8rem;color:var(--dim);margin-right:.15rem}
+.qline{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);padding:.28rem 0}
+.qline span:last-child{color:var(--white)}
+.qline.reward span:last-child{color:var(--blue)}
+
+/* ---------- calendar ---------- */
+.cal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.cal-top strong{font-family:var(--title);text-transform:uppercase;font-size:1rem}
+.cal-nav{display:flex;gap:.4rem}
+.cal-nav button{width:34px;height:34px;border-radius:8px;background:var(--raised);
+  border:1px solid var(--line);color:var(--white);cursor:pointer}
+.cal-nav button:disabled{opacity:.3;cursor:not-allowed}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);text-align:center;padding-bottom:.3rem}
+.day{aspect-ratio:1;border-radius:8px;border:1px solid transparent;background:var(--raised);
+  font-size:.82rem;color:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+.day:hover:not(:disabled){border-color:var(--blue)}
+.day:disabled{background:transparent;color:#333;cursor:not-allowed}
+.day.blank{background:transparent;border:none}
+.day.sel{background:var(--blue);color:var(--white);font-weight:600}
+.day.today::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+  width:3px;height:3px;border-radius:50%;background:var(--blue)}
+.day.sel.today::after{background:var(--white)}
+.slots{display:grid;gap:.5rem;margin-top:1rem}
+.slot{display:flex;justify-content:space-between;align-items:center;gap:1rem;border:1px solid var(--line);
+  border-radius:10px;padding:.75rem .9rem;background:var(--raised);cursor:pointer;text-align:left;
+  width:100%;font-family:var(--body);font-size:.9rem;color:var(--white)}
+.slot em{font-style:normal;font-size:.7rem;color:var(--dim)}
+.slot:disabled{opacity:.45;cursor:not-allowed}
+.slot:disabled em{color:#FF6B6B}
+.slot.sel{border-color:var(--blue);background:rgba(65,137,222,.1)}
+.slot.sel em{color:var(--blue)}
+.slot.gold{border-color:#FFC65C}.slot.gold em{color:#FFC65C}
+.slot-empty{font-size:.78rem;color:var(--dim)}
+.cal-key{font-size:.68rem;color:var(--dim);margin-top:.7rem;line-height:1.6}
+
+/* car stage */
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem;margin-bottom:1rem}
+.stage svg{width:100%;height:auto}
+.car-body{fill:#1E1E1E}
+.wheel{fill:#000;stroke:#3A3A3A;stroke-width:2}
+.rim{fill:none;stroke:var(--blue);stroke-width:2.5;opacity:.7}
+.sheen{fill:url(#sg);opacity:0;animation:sweep var(--sweep,4s) linear infinite}
+.stage[data-tier="1"] .sheen{opacity:.35}.stage[data-tier="2"] .sheen{opacity:.65}.stage[data-tier="3"] .sheen{opacity:.95}
+@keyframes sweep{0%{transform:translateX(-420px)}100%{transform:translateX(440px)}}
+@media(prefers-reduced-motion:reduce){.sheen{animation:none}}
+
+.foot-link{text-align:center;margin-top:2rem;font-size:.78rem;color:var(--dim)}
+.foot-link a{color:var(--muted);text-decoration:underline}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <a class="mark" href="index.html"><img src="images/logo.png" alt="Revivv"></a>
+    <button class="out hide" id="signOutBtn">Sign out</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- SIGN IN -->
+  <section class="gate" id="signedOut">
+    <h1 class="title">My Rewards</h1>
+    <p id="portalSub">Sign in to see your stamps and book your next detail.</p>
+
+    <div class="field">
+      <label for="emailIn">Email address</label>
+      <input id="emailIn" type="email" autocomplete="email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label for="passIn" id="passLabel">Password</label>
+      <span class="pwrap">
+        <input id="passIn" type="password" autocomplete="current-password" placeholder="••••••••">
+        <button type="button" class="peye" data-for="passIn" aria-label="Show password">
+          <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </span>
+    </div>
+    <div class="field hide" id="pass2Field">
+      <label for="pass2In">Confirm password</label>
+      <span class="pwrap">
+        <input id="pass2In" type="password" autocomplete="new-password" placeholder="••••••••">
+        <button type="button" class="peye" data-for="pass2In" aria-label="Show password">
+          <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </span>
+    </div>
+
+    <p class="msg" id="portalErr" role="status" aria-live="polite"></p>
+    <button class="btn btn-primary" id="signInBtn" style="width:100%">Sign in</button>
+    <div><button class="link-btn" id="modeBtn">First time? Create a password</button></div>
+    <div><button class="link-btn" id="forgotBtn">Forgot password</button></div>
+
+    <p class="hint" style="margin-top:1.4rem">Use the same email you booked with — that's how your stamps find you. New here? <a href="index.html#book" style="color:var(--blue)">Book your first detail →</a></p>
+  </section>
+
+  <!-- SIGNED IN -->
+  <section class="acct hide" id="signedIn">
+    <div class="acct-top">
+      <div>
+        <h1 class="title" id="acctName">—</h1>
+        <p class="sub" id="acctSince">—</p>
+      </div>
+      <span class="badge" id="acctBadge" data-t="regular">Regular</span>
+    </div>
+
+    <!-- stamp card -->
+    <div class="card">
+      <div class="stat"><span>Stamp card</span><span id="stampCount">0 / 6</span></div>
+      <div class="stamps" id="stampRow"></div>
+      <div class="stat"><span>Rewards discount</span><span id="acctDisc">—</span></div>
+      <div class="stat"><span>Credit balance</span><span id="acctCredit">$0</span></div>
+      <p class="hint" id="rewardHint"></p>
+    </div>
+
+    <!-- referral -->
+    <div class="card">
+      <div class="stat" style="margin-bottom:.5rem"><span>Share your code — you both get $25</span></div>
+      <div class="ref">
+        <code id="acctRef">—</code>
+        <button type="button" id="copyRef">Copy link</button>
+      </div>
+    </div>
+
+    <!-- history -->
+    <div class="card" id="histCard">
+      <div class="stat" style="margin-bottom:.6rem"><span>Your details</span></div>
+      <div class="hist" id="acctHist"></div>
+    </div>
+
+    <!-- QUOTE + BOOK -->
+    <h2 class="sec-label">Book your next detail</h2>
+
+    <div class="stage" id="stage" data-tier="1">
+      <svg viewBox="0 0 400 160" role="img" aria-label="Vehicle">
+        <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#4189DE" stop-opacity="0"/>
+          <stop offset="45%" stop-color="#6BACED" stop-opacity=".85"/>
+          <stop offset="55%" stop-color="#fff" stop-opacity=".95"/>
+          <stop offset="100%" stop-color="#4189DE" stop-opacity="0"/>
+        </linearGradient><clipPath id="cc"><path id="clipPath" d=""/></clipPath></defs>
+        <path id="carPath" class="car-body" d=""/>
+        <g clip-path="url(#cc)"><rect class="sheen" x="-140" y="0" width="120" height="160"/></g>
+        <g id="wheels"></g>
+        <line x1="0" y1="141" x2="400" y2="141" stroke="#2A2A2A" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <div class="field"><label>Vehicle</label>
+      <div class="opts v3" id="vehicleOpts">
+        <label class="opt"><input type="radio" name="vehicle" value="car" checked><span>Car<em>Sedan · hatch</em></span></label>
+        <label class="opt"><input type="radio" name="vehicle" value="suv"><span>SUV<em>4×4 · van</em></span></label>
+        <label class="opt"><input type="radio" name="vehicle" value="truck"><span>Truck<em>Pickup</em></span></label>
+      </div>
+    </div>
+
+    <div class="field"><label>Package</label>
+      <div class="opts v2" id="packageOpts">
+        <label class="opt"><input type="radio" name="pkg" value="exterior" checked><span>Express Exterior<em data-price-for="exterior">$90</em></span></label>
+        <label class="opt"><input type="radio" name="pkg" value="interior"><span>Express Interior<em data-price-for="interior">$160</em></span></label>
+        <label class="opt"><input type="radio" name="pkg" value="allround"><span>All-Around<em data-price-for="allround">$120</em></span></label>
+        <label class="opt"><input type="radio" name="pkg" value="supreme"><span>Supreme Valet<em data-price-for="supreme">$240</em></span></label>
+      </div>
+    </div>
+
+    <div class="field"><label>Add-ons — optional</label>
+      <div class="opts v2" id="addonOpts">
+        <label class="opt"><input type="checkbox" name="addon" value="Tyre pressure check &amp; top-up" data-price="10"><span>Tyre pressure<em>+$10</em></span></label>
+        <label class="opt"><input type="checkbox" name="addon" value="Ceramic spray sealant" data-price="30"><span>Ceramic sealant<em>+$30</em></span></label>
+        <label class="opt"><input type="checkbox" name="addon" value="Leather clean &amp; condition" data-price="40"><span>Leather clean<em>+$40</em></span></label>
+        <label class="opt"><input type="checkbox" name="addon" value="Pet hair removal" data-price="25"><span>Pet hair<em>+$25</em></span></label>
+        <label class="opt" style="grid-column:1/-1"><input type="checkbox" name="addon" id="seatAddon" value="Seat extraction shampoo" data-price="40" data-per-row="1">
+          <span>Seat extraction shampoo<em>+$40 per row</em>
+            <span class="qty"><button type="button" id="rowMinus">−</button><output id="rowOut">1 row</output><button type="button" id="rowPlus">+</button></span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="qline"><span>Package</span><span id="rBase">$90</span></div>
+    <div class="qline"><span>Add-ons</span><span id="rAddons">None</span></div>
+    <div class="qline reward hide" id="rDiscLine"><span>Rewards</span><span id="rDisc">—</span></div>
+    <div class="qline reward hide" id="rCreditLine"><span>Credit applied</span><span id="rCredit">—</span></div>
+    <div class="total"><span class="lbl">Total</span><span class="amt"><sup>BBD</sup>$<span id="rTotal">90</span></span></div>
+
+    <!-- calendar -->
+    <h2 class="sec-label">Pick your slot</h2>
+    <div class="cal-top">
+      <strong id="calMonth">—</strong>
+      <div class="cal-nav"><button id="calPrev">‹</button><button id="calNext">›</button></div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <p class="cal-key">Mon–Sat, 8am–6pm. Sundays by appointment.</p>
+    <div class="slots" id="slotList"><p class="slot-empty">Pick a date to see what's open.</p></div>
+
+    <!-- details -->
+    <h2 class="sec-label">Where &amp; when</h2>
+    <div class="field"><label for="phone">Phone</label><input id="phone" type="tel" placeholder="246 000 0000"></div>
+    <div class="field"><label for="vehicleDesc">Vehicle (make, model, year)</label><input id="vehicleDesc" type="text" placeholder="e.g. Suzuki Ciaz, 2019"></div>
+    <div class="field"><label for="where">Where</label>
+      <select id="where">
+        <option value="Mobile — we come to them">Mobile — come to me</option>
+        <option value="Drop off — customer comes to us">Drop off — I'll come to you</option>
+      </select>
+    </div>
+    <div class="field" id="addrField"><label for="address">Address for the mobile visit</label><input id="address" type="text" placeholder="Street, or landmark"></div>
+    <div class="field"><label for="parish">Parish</label>
+      <select id="parish">
+        <option value="">Select a parish</option>
+        <option>St. Michael</option><option>Christ Church</option><option>St. James</option>
+        <option>St. Thomas</option><option>St. George</option><option>St. Philip</option>
+        <option>St. Peter</option><option>St. Lucy</option><option>St. Andrew</option>
+        <option>St. Joseph</option><option>St. John</option>
+      </select>
+    </div>
+    <div class="field"><label for="notes">Anything we should know?</label><textarea id="notes" placeholder="Pet hair, sand, hard water spots…"></textarea></div>
+
+    <p class="msg" id="bookMsg" role="status" aria-live="polite"></p>
+    <button class="btn btn-primary" id="bookBtn" style="width:100%">Send booking request</button>
+
+    <p class="foot-link"><a href="index.html">View the full Revivv site →</a></p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL      = "https://mikotrcqvkfgvcnghskn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Eq-EhSVu-ph3DisH5pbKuw_40jOYDzp";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const REWARD_OFF = 0.50;
+
+const PACKAGES = {
+  exterior:{label:"The Express Exterior",price:{car:90,suv:110,truck:130},tier:1,long:false},
+  allround:{label:"All-Around Express",  price:{car:120,suv:150,truck:180},tier:2,long:false},
+  interior:{label:"The Express Interior",price:{car:160,suv:190,truck:220},tier:2,long:true},
+  supreme: {label:"Supreme Auto Valet",  price:{car:240,suv:270,truck:300},tier:3,long:true}
+};
+const CARS = {
+  car:{label:"Car",d:"M18,138 L18,104 Q18,92 34,88 L96,76 L138,48 Q146,40 162,40 L246,40 Q264,40 274,50 L306,78 L366,90 Q382,94 382,106 L382,138 Z",wheels:[[100,132],[302,132]]},
+  suv:{label:"SUV",d:"M16,138 L16,96 Q16,84 32,80 L84,72 L118,42 Q124,34 140,34 L266,34 Q282,34 290,42 L322,74 L370,82 Q386,86 386,98 L386,138 Z",wheels:[[96,130],[306,130]]},
+  truck:{label:"Truck",d:"M16,138 L16,92 Q16,82 30,79 L82,70 L112,42 Q118,34 134,34 L212,34 Q226,34 230,44 L236,80 L368,80 L368,60 L384,60 L384,138 Z",wheels:[[92,130],[316,130]]}
+};
+const SWEEP={1:"4.6s",2:"3.4s",3:"2.2s"};
+const SLOT_ID={"Priority slot":"priority","Morning":"morning","Afternoon":"afternoon","Late afternoon":"late"};
+const slotIdFrom=l=>{const k=Object.keys(SLOT_ID).find(k=>l.startsWith(k));return k?SLOT_ID[k]:null;};
+
+let customer=null;
+
+/* ---------- account ---------- */
+async function getAccount(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) return null;
+  const {data,error}=await sb.rpc("my_account");
+  if(error||!data) return null;
+  return {name:data.name,since:data.since,stamps:data.stamps,credit:Number(data.credit),
+    referral:data.referral,tier:data.tier,discount:Number(data.discount),
+    history:(data.history||[]).map(x=>({date:x.date,job:x.job,paid:Number(x.paid)}))};
+}
+function tierOf(c){return {key:(c.tier||"Regular").toLowerCase(),label:c.tier||"Regular",off:c.discount||0};}
+
+function renderAccount(){
+  const t=tierOf(customer);
+  document.getElementById("acctName").textContent=customer.name;
+  document.getElementById("acctSince").textContent="Customer since "+customer.since;
+  document.getElementById("acctCredit").textContent="$"+customer.credit;
+  document.getElementById("acctRef").textContent=customer.referral;
+  document.getElementById("acctDisc").textContent=t.off?Math.round(t.off*100)+"% off":"—";
+  document.getElementById("stampCount").textContent=customer.stamps+" / 6";
+  const b=document.getElementById("acctBadge");b.textContent=t.label;b.dataset.t=t.key;
+  document.getElementById("stampRow").innerHTML=Array.from({length:6},(_,i)=>{
+    if(i<customer.stamps) return '<span class="stamp on">✓</span>';
+    if(i===5) return '<span class="stamp free">'+Math.round(REWARD_OFF*100)+'%</span>';
+    return '<span class="stamp">'+(i+1)+'</span>';
+  }).join("");
+  const left=6-customer.stamps;
+  document.getElementById("rewardHint").textContent = customer.stamps>=5
+    ? "You've earned "+Math.round(REWARD_OFF*100)+"% off your next detail — any package."
+    : "You're "+left+" detail"+(left===1?"":"s")+" from "+Math.round(REWARD_OFF*100)+"% off.";
+  document.getElementById("acctHist").innerHTML=customer.history.length
+    ? customer.history.map(x=>'<p class="h"><b>'+x.job+'</b><span>'+x.date+' · $'+x.paid+'</span></p>').join("")
+    : '<p class="slot-empty">No completed details yet. Your first stamp lands once we have done the job.</p>';
+}
+
+function showAccount(){
+  document.getElementById("signedOut").classList.add("hide");
+  document.getElementById("signedIn").classList.remove("hide");
+  document.getElementById("signOutBtn").classList.remove("hide");
+  renderAccount(); update();
+}
+
+/* ---------- sign in (password) ---------- */
+const emailIn=document.getElementById("emailIn"),passIn=document.getElementById("passIn"),
+  pass2In=document.getElementById("pass2In"),pass2Field=document.getElementById("pass2Field"),
+  passLabel=document.getElementById("passLabel"),portalSub=document.getElementById("portalSub"),
+  signInBtn=document.getElementById("signInBtn"),modeBtn=document.getElementById("modeBtn"),
+  portalErr=document.getElementById("portalErr");
+let signUp=false;
+
+function setMode(s){
+  signUp=s;
+  pass2Field.classList.toggle("hide",!s);
+  passLabel.textContent=s?"Choose a password":"Password";
+  signInBtn.textContent=s?"Create account":"Sign in";
+  modeBtn.textContent=s?"Already have a password? Sign in":"First time? Create a password";
+  portalSub.textContent=s?"Set a password using the email you booked with — your stamps are already waiting."
+    :"Sign in to see your stamps and book your next detail.";
+  portalErr.textContent="";
+}
+modeBtn.addEventListener("click",()=>setMode(!signUp));
+
+async function doAuth(){
+  portalErr.className="msg";portalErr.textContent="";
+  const email=emailIn.value.trim(),pass=passIn.value;
+  if(!email.includes("@")){portalErr.className="msg err";portalErr.textContent="Enter your email.";return;}
+  if(pass.length<8){portalErr.className="msg err";portalErr.textContent="Password must be at least 8 characters.";return;}
+  if(signUp&&pass!==pass2In.value){portalErr.className="msg err";portalErr.textContent="Those passwords don't match.";return;}
+  signInBtn.disabled=true;signInBtn.textContent=signUp?"Creating…":"Signing in…";
+  try{
+    const {error}=signUp?await sb.auth.signUp({email,password:pass}):await sb.auth.signInWithPassword({email,password:pass});
+    if(error){
+      if(/already registered/i.test(error.message)) throw new Error("There's already a password on that email — sign in instead.");
+      if(/invalid login/i.test(error.message)) throw new Error("Wrong email or password.");
+      throw new Error(error.message);
+    }
+    const acct=await getAccount();
+    if(!acct){portalErr.className="msg err";portalErr.textContent="Signed in, but no bookings on that email yet. Book a detail and it'll link up.";return;}
+    customer=acct;
+    if(!document.getElementById("phone").value) document.getElementById("phone").value="";
+    showAccount();
+  }catch(err){portalErr.className="msg err";portalErr.textContent=err.message;}
+  finally{signInBtn.disabled=false;signInBtn.textContent=signUp?"Create account":"Sign in";}
+}
+signInBtn.addEventListener("click",doAuth);
+emailIn.addEventListener("keydown",e=>{if(e.key==="Enter")passIn.focus();});
+passIn.addEventListener("keydown",e=>{if(e.key==="Enter")signUp?pass2In.focus():doAuth();});
+pass2In.addEventListener("keydown",e=>{if(e.key==="Enter")doAuth();});
+
+document.getElementById("forgotBtn").addEventListener("click",async()=>{
+  const email=emailIn.value.trim();portalErr.className="msg";
+  if(!email.includes("@")){portalErr.className="msg err";portalErr.textContent="Type your email above first.";return;}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error){portalErr.className="msg err";portalErr.textContent=error.message;return;}
+  portalErr.className="msg ok";portalErr.textContent="If that email has an account, a reset link is on its way.";
+});
+
+document.getElementById("signOutBtn").addEventListener("click",async()=>{
+  await sb.auth.signOut();customer=null;
+  document.getElementById("signedIn").classList.add("hide");
+  document.getElementById("signedOut").classList.remove("hide");
+  document.getElementById("signOutBtn").classList.add("hide");
+  emailIn.value="";passIn.value="";pass2In.value="";setMode(false);
+});
+document.getElementById("copyRef").addEventListener("click",e=>{
+  navigator.clipboard.writeText(location.origin+location.pathname.replace("portal.html","index.html")+"?ref="+customer.referral);
+  e.target.textContent="Copied";setTimeout(()=>e.target.textContent="Copy link",1600);
+});
+
+/* eye toggles */
+document.querySelectorAll(".peye").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const i=document.getElementById(btn.dataset.for),h=i.type==="password";
+    i.type=h?"text":"password";i.focus();
+  });
+});
+
+/* ---------- quote ---------- */
+const stage=document.getElementById("stage"),carPath=document.getElementById("carPath"),
+  clipPath=document.getElementById("clipPath"),wheelsG=document.getElementById("wheels"),
+  sheen=document.querySelector(".sheen");
+const seatAddon=document.getElementById("seatAddon"),rowOut=document.getElementById("rowOut");
+let seatRows=1,shown=0;
+
+function drawCar(k){const c=CARS[k];carPath.setAttribute("d",c.d);clipPath.setAttribute("d",c.d);
+  wheelsG.innerHTML=c.wheels.map(([x,y])=>'<circle class="wheel" cx="'+x+'" cy="'+y+'" r="19"/><circle class="rim" cx="'+x+'" cy="'+y+'" r="9"/>').join("");}
+function countTo(t){const s=shown,d=t-s,t0=performance.now();(function f(n){const p=Math.min((n-t0)/380,1);
+  document.getElementById("rTotal").textContent=Math.round(s+d*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f);else shown=t;})(performance.now());}
+
+function update(){
+  const v=document.querySelector('input[name="vehicle"]:checked').value;
+  const key=document.querySelector('input[name="pkg"]:checked').value;
+  const P=PACKAGES[key],base=P.price[v];
+  document.querySelectorAll("[data-price-for]").forEach(el=>el.textContent="$"+PACKAGES[el.dataset.priceFor].price[v]);
+  const adds=[...document.querySelectorAll('input[name="addon"]:checked')];
+  let addTotal=0;const names=adds.map(a=>{const u=parseFloat(a.dataset.price);
+    if(a.dataset.perRow){addTotal+=u*seatRows;return a.value+" ×"+seatRows;}addTotal+=u;return a.value;});
+  let total=base+addTotal,disc="",cred="";
+  if(customer){
+    if(customer.stamps>=5){const off=base*REWARD_OFF;total-=off;disc="6th stamp — "+Math.round(REWARD_OFF*100)+"% off ($"+off.toFixed(0)+")";}
+    else{const t=tierOf(customer);if(t.off>0){const off=base*t.off;total-=off;disc=t.label+" — "+Math.round(t.off*100)+"% off ($"+off.toFixed(0)+")";}}
+    if(customer.credit>0){const u=Math.min(customer.credit,total);total-=u;cred="−$"+u.toFixed(0);}
+  }
+  total=Math.max(0,Math.round(total));
+  drawCar(v);stage.dataset.tier=P.tier;sheen.style.setProperty("--sweep",SWEEP[P.tier]);
+  document.getElementById("rBase").textContent="$"+base;
+  document.getElementById("rAddons").textContent=names.length?names.join(", "):"None";
+  document.getElementById("rDiscLine").classList.toggle("hide",!disc);
+  document.getElementById("rCreditLine").classList.toggle("hide",!cred);
+  document.getElementById("rDisc").textContent=disc;document.getElementById("rCredit").textContent=cred;
+  countTo(total);
+  window._quote={vehicle:CARS[v].label,vehicleType:v,package:P.label,addons:names.join(", "),total};
+  if(selectedISO)renderSlots(selectedISO);
+}
+document.querySelectorAll('#vehicleOpts input,#packageOpts input,#addonOpts input').forEach(el=>el.addEventListener("change",update));
+function setRows(n){seatRows=Math.min(4,Math.max(1,n));rowOut.textContent=seatRows+(seatRows===1?" row":" rows");if(!seatAddon.checked)seatAddon.checked=true;update();}
+document.getElementById("rowPlus").addEventListener("click",e=>{e.preventDefault();setRows(seatRows+1);});
+document.getElementById("rowMinus").addEventListener("click",e=>{e.preventDefault();setRows(seatRows-1);});
+
+/* ---------- calendar ---------- */
+const SLOTS=[
+  {id:"priority",label:"Priority slot",time:"7:00am – 9:00am",goldOnly:true,long:false},
+  {id:"morning",label:"Morning",time:"8:00am – 12:00pm",goldOnly:false,long:true},
+  {id:"afternoon",label:"Afternoon",time:"12:00pm – 4:00pm",goldOnly:false,long:true},
+  {id:"late",label:"Late afternoon",time:"4:00pm – 6:00pm",goldOnly:false,long:false}
+];
+async function slotsTaken(iso){const {data,error}=await sb.rpc("slots_taken",{d:iso});
+  if(error)return[];return(data||[]).map(r=>typeof r==="string"?r:r.slots_taken);}
+
+const calGrid=document.getElementById("calGrid"),calMonth=document.getElementById("calMonth"),
+  slotList=document.getElementById("slotList");
+const today=new Date();today.setHours(0,0,0,0);
+let viewY=today.getFullYear(),viewM=today.getMonth(),selectedISO=null,selectedSlot=null;
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const isoOf=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const pretty=d=>d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+
+function renderCalendar(){
+  calMonth.textContent=MONTHS[viewM]+" "+viewY;
+  document.getElementById("calPrev").disabled=(viewY===today.getFullYear()&&viewM===today.getMonth());
+  calGrid.innerHTML=["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=>'<div class="dow">'+d+'</div>').join("");
+  const offset=(new Date(viewY,viewM,1).getDay()+6)%7,days=new Date(viewY,viewM+1,0).getDate();
+  for(let i=0;i<offset;i++)calGrid.insertAdjacentHTML("beforeend",'<button class="day blank" disabled></button>');
+  for(let d=1;d<=days;d++){const date=new Date(viewY,viewM,d),key=isoOf(date);
+    const off=date<today||date.getDay()===0;const cls=["day"];
+    if(key===isoOf(today))cls.push("today");if(key===selectedISO)cls.push("sel");
+    calGrid.insertAdjacentHTML("beforeend",'<button class="'+cls.join(" ")+'" data-iso="'+key+'" '+(off?"disabled":"")+'>'+d+'</button>');
+  }
+}
+async function renderSlots(key){
+  const date=new Date(key+"T00:00:00");
+  slotList.innerHTML='<p class="head" style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">'+pretty(date)+'</p><p class="slot-empty">Checking…</p>';
+  const taken=await slotsTaken(key);
+  const P=PACKAGES[document.querySelector('input[name="pkg"]:checked').value];
+  const isGold=customer&&tierOf(customer).key==="gold";
+  const rows=SLOTS.filter(s=>!s.goldOnly||isGold).map(s=>{
+    let why=s.time,off=taken.includes(s.id);
+    if(off)why="Booked";else if(P.long&&!s.long){off=true;why="Not enough time for this package";}
+    return '<button class="slot'+(s.goldOnly?" gold":"")+'" data-slot="'+s.label+' ('+s.time+')" '+(off?"disabled":"")+'><span>'+s.label+(s.goldOnly?" · Gold":"")+'</span><em>'+why+'</em></button>';
+  }).join("");
+  slotList.innerHTML='<p style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem">'+pretty(date)+'</p>'+rows;
+}
+calGrid.addEventListener("click",e=>{const b=e.target.closest(".day");if(!b||b.disabled)return;
+  selectedISO=b.dataset.iso;selectedSlot=null;renderCalendar();renderSlots(selectedISO);});
+slotList.addEventListener("click",e=>{const b=e.target.closest(".slot");if(!b||b.disabled)return;
+  slotList.querySelectorAll(".slot").forEach(s=>s.classList.remove("sel"));b.classList.add("sel");selectedSlot=b.dataset.slot;});
+document.getElementById("calPrev").addEventListener("click",()=>{viewM--;if(viewM<0){viewM=11;viewY--;}renderCalendar();});
+document.getElementById("calNext").addEventListener("click",()=>{viewM++;if(viewM>11){viewM=0;viewY++;}renderCalendar();});
+
+/* where toggle */
+const whereSel=document.getElementById("where"),addrField=document.getElementById("addrField");
+function syncWhere(){addrField.classList.toggle("hide",!whereSel.value.startsWith("Mobile"));}
+whereSel.addEventListener("change",syncWhere);syncWhere();
+
+/* ---------- book ---------- */
+const bookMsg=document.getElementById("bookMsg"),bookBtn=document.getElementById("bookBtn");
+bookBtn.addEventListener("click",async()=>{
+  bookMsg.className="msg";
+  const phone=document.getElementById("phone").value.trim();
+  const vdesc=document.getElementById("vehicleDesc").value.trim();
+  if(!selectedISO||!selectedSlot){bookMsg.className="msg err";bookMsg.textContent="Pick a date and a slot.";return;}
+  if(!phone||!vdesc){bookMsg.className="msg err";bookMsg.textContent="Add your phone and vehicle.";return;}
+  const where=whereSel.value,addr=document.getElementById("address").value.trim();
+  if(where.startsWith("Mobile")&&!addr){bookMsg.className="msg err";bookMsg.textContent="Add the address for the mobile visit.";return;}
+  bookMsg.textContent="Sending…";bookBtn.disabled=true;
+  try{
+    const q=window._quote;
+    const {error}=await sb.rpc("create_booking",{
+      p_name:customer.name,
+      p_email:(await sb.auth.getUser()).data.user.email,
+      p_phone:phone,p_date:selectedISO,p_slot:slotIdFrom(selectedSlot),
+      p_vehicle_type:q.vehicle,p_vehicle_desc:vdesc,p_package:q.package,
+      p_addons:q.addons||null,p_total:Number(q.total),
+      p_location:where,p_parish:document.getElementById("parish").value,
+      p_address:addr||null,p_notes:document.getElementById("notes").value.trim()||null,
+      p_referral:null
+    });
+    if(error){if(/just taken|duplicate|unique/i.test(error.message))throw new Error("That slot was just taken. Pick another.");throw new Error(error.message);}
+    bookMsg.className="msg ok";bookMsg.textContent="Booking sent! We'll confirm your slot shortly.";
+    selectedISO=null;selectedSlot=null;renderCalendar();
+    slotList.innerHTML='<p class="slot-empty">Pick a date to see what is open.</p>';
+  }catch(err){bookMsg.className="msg err";bookMsg.textContent=err.message;if(selectedISO)renderSlots(selectedISO);}
+  finally{bookBtn.disabled=false;}
+});
+
+/* ---------- boot ---------- */
+renderCalendar();
+(async()=>{const acct=await getAccount();if(acct){customer=acct;showAccount();}})();
+</script>
+</body>
+</html>

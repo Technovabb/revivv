@@ -349,14 +349,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);outline-of
 .btn-wa svg{width:16px;height:16px;fill:currentColor}
 .or{font-family:var(--body);font-size:.72rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
 
-#appHome{display:none;position:sticky;top:66px;z-index:40;
-  background:var(--panel);border-bottom:1px solid var(--line);
-  padding:.7rem 0}
-body.appmode #appHome{display:block}
-#appHome .row{display:flex;align-items:center;justify-content:space-between;gap:1rem}
-#appHome span{font-family:var(--body);font-size:.8rem;color:var(--muted)}
-#appHome a{font-family:var(--body);font-size:.78rem;font-weight:600;
-  color:var(--blue);text-decoration:none;white-space:nowrap}
 #installBar{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:80;
   display:none;align-items:center;gap:1rem;background:var(--raised);
   border:1px solid var(--blue);border-radius:99px;padding:.6rem .7rem .6rem 1.3rem;
@@ -655,14 +647,6 @@ footer{border-top:1px solid var(--line);padding:3rem 0 2.4rem;background:var(--p
     </div>
   </div>
 </section>
-
-<!-- APP HOME STRIP (installed app only) -->
-<div id="appHome">
-  <div class="wrap row">
-    <span>Welcome back to Revivv</span>
-    <a href="#book">Book a detail →</a>
-  </div>
-</div>
 
 <!-- REWARDS -->
 <section id="rewards">
@@ -1568,22 +1552,6 @@ if (isIOS && !standalone && location.protocol === "https:"){
   document.getElementById("installGo").style.display = "none";
   installBar.classList.add("ios");
   setTimeout(() => installBar.classList.add("show"), 3000);
-}
-
-/* ===== app mode =====
-   When opened as the installed app (standalone display, or launched via
-   the ?app=1 start_url), lead with the portal. A normal browser visit is
-   untouched — it still lands on the hero. */
-const isStandalone = window.navigator.standalone
-  || matchMedia("(display-mode: standalone)").matches
-  || new URLSearchParams(location.search).get("app") === "1";
-
-if (isStandalone){
-  document.body.classList.add("appmode");
-  const h = location.hash.replace("#","");
-  if (!h || h === "rewards"){
-    document.getElementById("rewards").scrollIntoView();
-  }
 }
 
 document.getElementById("yr").textContent  = new Date().getFullYear();

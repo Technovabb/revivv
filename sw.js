@@ -10,10 +10,11 @@
  *      would happily sell someone a slot that's already gone.
  */
 
-const VERSION = 'revivv-v3';        // bump this when you change index.html
+const VERSION = 'revivv-v4';        // bump this when you change index.html
 const SHELL = [
   './',
   './index.html',
+  './portal.html',
   './manifest.json',
   './images/app-192.png',
   './images/app-512.png',
