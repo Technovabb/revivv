@@ -349,12 +349,24 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);outline-of
 .btn-wa svg{width:16px;height:16px;fill:currentColor}
 .or{font-family:var(--body);font-size:.72rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
 
+#appHome{display:none;position:sticky;top:66px;z-index:40;
+  background:var(--panel);border-bottom:1px solid var(--line);
+  padding:.7rem 0}
+body.appmode #appHome{display:block}
+#appHome .row{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+#appHome span{font-family:var(--body);font-size:.8rem;color:var(--muted)}
+#appHome a{font-family:var(--body);font-size:.78rem;font-weight:600;
+  color:var(--blue);text-decoration:none;white-space:nowrap}
 #installBar{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:80;
   display:none;align-items:center;gap:1rem;background:var(--raised);
   border:1px solid var(--blue);border-radius:99px;padding:.6rem .7rem .6rem 1.3rem;
   box-shadow:0 10px 40px rgba(0,0,0,.6);max-width:92vw}
 #installBar.show{display:flex}
-#installBar p{font-size:.85rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#installBar p{font-size:.85rem;color:var(--white);line-height:1.35}
+#installBar.ios{border-radius:14px;padding:.9rem 1rem}
+#installBar.ios p{white-space:normal;max-width:15rem}
+#installBar svg.share{width:15px;height:15px;vertical-align:-2px;fill:none;
+  stroke:var(--blue);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin:0 .15rem}
 #installBar button{border:none;cursor:pointer;font-family:var(--body)}
 #installBar .go{background:var(--blue);color:var(--white);font-weight:600;font-size:.8rem;
   border-radius:99px;padding:.6rem 1.1rem;white-space:nowrap}
@@ -644,6 +656,14 @@ footer{border-top:1px solid var(--line);padding:3rem 0 2.4rem;background:var(--p
   </div>
 </section>
 
+<!-- APP HOME STRIP (installed app only) -->
+<div id="appHome">
+  <div class="wrap row">
+    <span>Welcome back to Revivv</span>
+    <a href="#book">Book a detail →</a>
+  </div>
+</div>
+
 <!-- REWARDS -->
 <section id="rewards">
   <div class="wrap">
@@ -840,7 +860,7 @@ footer{border-top:1px solid var(--line);padding:3rem 0 2.4rem;background:var(--p
 </section>
 
 <div id="installBar">
-  <p>Add Revivv to your home screen</p>
+  <p id="installMsg">Add Revivv to your home screen</p>
   <button class="go" id="installGo">Install</button>
   <button class="no" id="installNo" aria-label="Not now">×</button>
 </div>
@@ -1524,11 +1544,6 @@ document.getElementById("installGo").addEventListener("click", async () => {
     await deferredPrompt.userChoice;
     deferredPrompt = null;
     installBar.classList.remove("show");
-  } else {
-    /* iPhone has no install API — Apple requires the user to do it by hand,
-       so the honest move is to tell them exactly where the button is. */
-    installBar.querySelector("p").textContent = "Tap Share, then Add to Home Screen";
-    installBar.querySelector(".go").style.display = "none";
   }
 });
 
@@ -1538,10 +1553,37 @@ document.getElementById("installNo").addEventListener("click", () => {
 
 /* iOS: Safari never fires beforeinstallprompt. Detect it and offer instructions,
    but only if they haven't already installed it. */
+/* iOS: Apple gives no install API, so the only honest thing is to show
+   exactly where the button is — and to say "Safari", because no other
+   iPhone browser can do this. */
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isSafari = isIOS && !/crios|fxios|edgios|opios/i.test(navigator.userAgent);
 const standalone = window.navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+
 if (isIOS && !standalone && location.protocol === "https:"){
-  setTimeout(() => installBar.classList.add("show"), 4000);
+  const share = `<svg class="share" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L8 7m4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
+  document.getElementById("installMsg").innerHTML = isSafari
+    ? `Add Revivv to your home screen — tap ${share} <b>Share</b>, then <b>Add to Home Screen</b>.`
+    : `To install Revivv, open this page in <b>Safari</b>, then tap ${share} <b>Share → Add to Home Screen</b>.`;
+  document.getElementById("installGo").style.display = "none";
+  installBar.classList.add("ios");
+  setTimeout(() => installBar.classList.add("show"), 3000);
+}
+
+/* ===== app mode =====
+   When opened as the installed app (standalone display, or launched via
+   the ?app=1 start_url), lead with the portal. A normal browser visit is
+   untouched — it still lands on the hero. */
+const isStandalone = window.navigator.standalone
+  || matchMedia("(display-mode: standalone)").matches
+  || new URLSearchParams(location.search).get("app") === "1";
+
+if (isStandalone){
+  document.body.classList.add("appmode");
+  const h = location.hash.replace("#","");
+  if (!h || h === "rewards"){
+    document.getElementById("rewards").scrollIntoView();
+  }
 }
 
 document.getElementById("yr").textContent  = new Date().getFullYear();

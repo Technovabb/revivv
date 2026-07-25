@@ -2,7 +2,7 @@
   "name": "Revivv Vehicle Detailing",
   "short_name": "Revivv",
   "description": "Book a detail, build a quote, and track your Revivv Rewards stamps.",
-  "start_url": "./index.html",
+  "start_url": "./index.html?app=1#rewards",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
