@@ -32,11 +32,11 @@
   "shortcuts": [
     {
       "name": "Build a quote",
-      "url": "./index.html#quote"
+      "url": "./quote.html"
     },
     {
       "name": "My rewards",
-      "url": "./index.html#rewards"
+      "url": "./portal.html"
     }
   ]
 }

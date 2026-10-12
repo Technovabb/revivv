@@ -65,6 +65,7 @@ for (const rel of fs.readdirSync(PAGES).filter(f => f.endsWith('.html'))) {
     .replace(/\{\{title\}\}/g, esc(meta.title ? `${meta.title} — ${SITE_NAME}` : `${SITE_NAME} — Barbados`))
     .replace(/\{\{description\}\}/g, esc(meta.description || ''))
     .replace(/\{\{bodyClass\}\}/g, meta.bodyClass || '')
+    .replace(/\{\{active:(\w+)\}\}/g, (x, key) => (meta.nav === key ? ' is-active' : ''))
     .replace(/\{\{scripts\}\}/g, () => scripts)
     .replace(/\{\{preload\}\}/g, () => preload)
     .replace(/\{\{version\}\}/g, version);

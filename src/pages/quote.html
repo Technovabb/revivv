@@ -1,0 +1,255 @@
+<!--meta {
+  "title": "Quote & book",
+  "description": "Build your Revivv quote, apply your rewards, and book a slot on the live calendar.",
+  "bodyClass": "page-quote",
+  "nav": "quote",
+  "preload": [],
+  "scripts": [
+    "assets/js/app.js"
+  ]
+} -->
+
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow">Instant quote</p>
+    <h1>Build your quote. Book your slot.</h1>
+    <p class="page-sub">Pick what you drive, see the price, then pick a time. No callback needed.</p>
+  </div>
+</section>
+<section id="quote">
+  <div class="wrap">
+    <div class="builder">
+      <div>
+        <div class="step">
+          <p class="step-label"><b>01</b> Vehicle</p>
+          <div class="opts veh" id="vehicleOpts">
+            <label class="opt"><input type="radio" name="vehicle" value="car" checked><span>Car<em>Sedan · hatch · coupe</em></span></label>
+            <label class="opt"><input type="radio" name="vehicle" value="suv"><span>SUV<em>Crossover · 4×4 · van</em></span></label>
+            <label class="opt"><input type="radio" name="vehicle" value="truck"><span>Truck<em>Pickup · double cab</em></span></label>
+          </div>
+        </div>
+
+        <div class="step">
+          <p class="step-label"><b>02</b> Package</p>
+          <div class="opts pkg" id="packageOpts">
+            <label class="opt"><input type="radio" name="pkg" value="exterior" checked><span>The Express Exterior<em data-price-for="exterior">$90</em></span></label>
+            <label class="opt"><input type="radio" name="pkg" value="interior"><span>The Express Interior<em data-price-for="interior">$160</em></span></label>
+            <label class="opt"><input type="radio" name="pkg" value="allround"><span>All-Around Express<em data-price-for="allround">$120</em></span></label>
+            <label class="opt"><input type="radio" name="pkg" value="supreme"><span>Supreme Auto Valet<em data-price-for="supreme">$240</em></span></label>
+          </div>
+        </div>
+
+        <div class="step">
+          <p class="step-label"><b>03</b> Add-ons <span style="color:var(--dim)">— optional</span></p>
+          <div class="opts addons" id="addonOpts">
+            <label class="opt"><input type="checkbox" name="addon" value="Tyre pressure check &amp; top-up" data-price="10"><span>Tyre pressure check<em>+$10</em></span></label>
+            <label class="opt"><input type="checkbox" name="addon" value="Ceramic spray sealant" data-price="30"><span>Ceramic spray sealant<em>+$30 · 3–6 months</em></span></label>
+            <label class="opt"><input type="checkbox" name="addon" value="Leather clean &amp; condition" data-price="40"><span>Leather clean &amp; condition<em>+$40</em></span></label>
+            <label class="opt"><input type="checkbox" name="addon" value="Pet hair removal" data-price="25"><span>Pet hair removal<em>+$25</em></span></label>
+            <label class="opt" style="grid-column:1/-1">
+              <input type="checkbox" name="addon" id="seatAddon" value="Seat extraction shampoo" data-price="40" data-per-row="1">
+              <span>Seat extraction shampoo<em>+$40 per row</em>
+                <span class="qty">
+                  <button type="button" id="rowMinus" aria-label="Fewer rows">−</button>
+                  <output id="rowOut">1 row</output>
+                  <button type="button" id="rowPlus" aria-label="More rows">+</button>
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <aside class="stage" id="stage" data-tier="1">
+        <svg class="stage-svg" viewBox="0 0 400 160" role="img" aria-label="Silhouette of the selected vehicle">
+          <defs>
+            <linearGradient id="sheenGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#4189DE" stop-opacity="0"/>
+              <stop offset="45%" stop-color="#6BACED" stop-opacity=".85"/>
+              <stop offset="55%" stop-color="#FFFFFF" stop-opacity=".95"/>
+              <stop offset="100%" stop-color="#4189DE" stop-opacity="0"/>
+            </linearGradient>
+            <clipPath id="carClip"><path id="clipPath" d=""/></clipPath>
+          </defs>
+          <path id="carPath" class="car-body" d=""/>
+          <g clip-path="url(#carClip)"><rect class="sheen" x="-140" y="0" width="120" height="160"/></g>
+          <g id="wheels"></g>
+          <line x1="0" y1="141" x2="400" y2="141" stroke="#2A2A2A" stroke-width="2"/>
+        </svg>
+
+        <div class="readout">
+          <div class="line"><span>Vehicle</span><span id="rVehicle">Car</span></div>
+          <div class="line"><span>Package</span><span id="rPkg">The Express Exterior</span></div>
+          <div class="line"><span>Package price</span><span id="rBase">$90</span></div>
+          <div class="line"><span>Add-ons</span><span id="rAddons">None</span></div>
+          <div class="line reward hide" id="rDiscLine"><span>Rewards</span><span id="rDisc">—</span></div>
+          <div class="line reward hide" id="rCreditLine"><span>Credit applied</span><span id="rCredit">—</span></div>
+          <div class="total">
+            <span class="lbl">Total</span>
+            <span class="amt"><sup>BBD</sup>$<span id="rTotal">90</span></span>
+          </div>
+          <p class="note">Heavy soiling, sand, deep stains or excessive pet hair may need extra time — we'll tell you before we start, never after.</p>
+          <a class="btn btn-primary" href="#book" style="display:block;text-align:center;margin-top:1.1rem">Book this detail</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+<section id="rewards">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Revivv Rewards</p>
+      <h2>Apply your rewards.</h2>
+      <p>Sign in and your stamps, credit and discount apply to the quote above — automatically. New here? <a href="rewards.html" style="color:var(--blue-lt)">See how rewards work →</a></p>
+    </div>
+    <div class="quote-portal">
+      <div class="portal">
+        <div id="signedOut">
+          <h3>Customer portal</h3>
+          <p class="sub" id="portalSub">Sign in to see your stamps, credit and history — and to have your discount applied to any quote you build.</p>
+
+          <div class="field">
+            <label for="emailIn">Email address</label>
+            <input id="emailIn" type="email" autocomplete="email" placeholder="you@example.com">
+          </div>
+
+          <div class="field">
+            <label for="passIn" id="passLabel">Password</label>
+            <span class="pwrap">
+              <input id="passIn" type="password" autocomplete="current-password" placeholder="••••••••">
+              <button type="button" class="peye" data-for="passIn" aria-label="Show password">
+                <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </span>
+          </div>
+
+          <div class="field hide" id="pass2Field">
+            <label for="pass2In">Confirm password</label>
+            <span class="pwrap">
+              <input id="pass2In" type="password" autocomplete="new-password" placeholder="••••••••">
+              <button type="button" class="peye" data-for="pass2In" aria-label="Show password">
+                <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </span>
+          </div>
+
+          <p id="portalErr" role="status" aria-live="polite"></p>
+          <button class="btn btn-primary" id="signInBtn" style="width:100%">Sign in</button>
+          <button class="link-btn" id="modeBtn">First time? Create a password</button>
+          <button class="link-btn" id="forgotBtn" style="margin-left:1.2rem">Forgot password</button>
+
+          <p class="demo-hint">
+            Use the same email you booked with — that's how your stamps find you.
+          </p>
+        </div>
+
+        <div id="signedIn" class="hide">
+          <div class="acct-top">
+            <div>
+              <h3 id="acctName">—</h3>
+              <p class="sub" style="margin:0" id="acctSince">—</p>
+            </div>
+            <span class="badge" id="acctBadge" data-t="regular">Regular</span>
+          </div>
+          <p class="acct-stat"><span>Stamp card</span><span id="stampCount">0 / 6</span></p>
+          <div class="stamps" id="stampRow"></div>
+          <p class="acct-stat"><span>Rewards discount</span><span id="acctDisc">—</span></p>
+          <p class="acct-stat"><span>Credit balance</span><span id="acctCredit">$0</span></p>
+          <p class="acct-stat"><span>Usual package</span><span id="acctUsual">—</span></p>
+          <div class="ref">
+            <span><small style="font-family:var(--body);font-size:.68rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;display:block">Share your code — you both get $25</small><code id="acctRef">—</code></span>
+            <button type="button" id="copyRef">Copy</button>
+          </div>
+          <div class="hist" id="acctHist"></div>
+          <a class="btn btn-primary" href="#quote" style="display:block;text-align:center;margin-top:1.4rem">Book your next detail</a>
+          <button class="link-btn" id="pwBtn">Change password</button>
+          <button class="link-btn" id="signOutBtn" style="margin-left:1.2rem">Sign out</button>
+
+          <div class="field hide" id="pwPanel" style="margin-top:1.2rem">
+            <label for="newPw">New password</label>
+            <span class="pwrap">
+              <input id="newPw" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+              <button type="button" class="peye" data-for="newPw" aria-label="Show password">
+                <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </span>
+            <p id="pwMsg" style="font-size:.8rem;min-height:1.2em;margin:.5rem 0"></p>
+            <button class="btn btn-primary" id="pwSave" style="width:100%">Save new password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="book">
+  <div class="wrap">
+    <form id="bookingForm">
+      <input type="hidden" name="quote_summary" id="quoteSummary">
+      <input type="hidden" name="vehicle_type" id="fVehicleType">
+      <input type="hidden" name="package"      id="fPackage">
+      <input type="hidden" name="addons"       id="fAddons">
+      <input type="hidden" name="total"        id="fTotal">
+      <input type="hidden" name="preferred_date" id="fDate">
+      <input type="hidden" name="preferred_time" id="fTime">
+      <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
+
+      <div class="sched">
+        <div>
+          <div class="cal-top">
+            <strong id="calMonth">—</strong>
+            <div class="cal-nav">
+              <button type="button" id="calPrev" aria-label="Previous month">&#8249;</button>
+              <button type="button" id="calNext" aria-label="Next month">&#8250;</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <p class="cal-key">Mon–Sat, 8am–6pm. Sundays by appointment — call us.<br>Greyed-out dates are past or closed.</p>
+        </div>
+        <div class="slots" id="slotList">
+          <p class="head">Available slots</p>
+          <p class="slot-empty">Pick a date to see what's open.</p>
+        </div>
+      </div>
+
+      <div class="field"><label for="name">Full name</label><input id="name" name="name" type="text" required autocomplete="name"></div>
+      <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="246 000 0000"></div>
+      <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required autocomplete="email"></div>
+      <div class="field">
+        <label for="where">Where</label>
+        <select id="where" name="service_location" required>
+          <option value="Mobile — we come to them">Mobile — come to me</option>
+          <option value="Drop off — customer comes to us">Drop off — I'll come to you</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="parish">Parish</label>
+        <select id="parish" name="parish" required>
+          <option value="">Select a parish</option>
+          <option>St. Michael</option><option>Christ Church</option><option>St. James</option>
+          <option>St. Thomas</option><option>St. George</option><option>St. Philip</option>
+          <option>St. Peter</option><option>St. Lucy</option><option>St. Andrew</option>
+          <option>St. Joseph</option><option>St. John</option>
+        </select>
+      </div>
+      <div class="field"><label for="vehicleDesc">Vehicle (make, model, year)</label><input id="vehicleDesc" name="vehicle_description" type="text" required placeholder="e.g. Toyota Hilux, 2019"></div>
+      <div class="field full" id="addrField"><label for="address">Address for the mobile visit</label><input id="address" name="address" type="text" placeholder="Street address, or landmark and workplace"></div>
+      <div class="field full"><label for="quoteField">Your quote</label><input id="quoteField" name="quote_display" type="text" readonly></div>
+      <div class="field full">
+        <label for="refIn">Referral code <span style="color:var(--dim)">— optional</span></label>
+        <input id="refIn" name="referral" type="text" placeholder="REVIVV-XXXXX" style="text-transform:uppercase">
+        <p id="refMsg" style="font-size:.78rem;min-height:1.1em;color:var(--dim)">Got a code from a friend? You both get $25 once your first detail is done.</p>
+      </div>
+      <div class="field full"><label for="notes">Anything we should know?</label><textarea id="notes" name="notes" placeholder="Pet hair, sand, spilled juice, hard water spots — tell us and we'll come prepared."></textarea></div>
+
+      <div class="form-foot">
+        <button class="btn btn-primary" type="submit" id="submitBtn">Send booking request</button>
+        <span class="or">or</span>
+        <a class="btn btn-wa" id="waBtn" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.8 14.2c-.2.7-1.2 1.3-1.9 1.4-.5.1-1.2.1-1.9-.1a13.7 13.7 0 0 1-6.9-6c-.5-.8-.9-1.8-.9-2.8 0-1 .5-1.6.8-1.9.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2 0 .4-.1.6l-.4.5c-.1.2-.3.3-.1.6a9.4 9.4 0 0 0 3.9 3.4c.3.2.5.1.6 0l.9-1c.2-.2.3-.2.6-.1l1.9.9c.3.1.5.2.5.4.1.2.1.9-.1 1.4Z"/></svg>
+          Book on WhatsApp
+        </a>
+        <p id="formMsg" role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </div>
+</section>
