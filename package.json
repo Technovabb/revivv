@@ -1,0 +1,9 @@
+{
+  "name": "revivv",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Revivv Vehicle Detailing — booking, quote builder and rewards PWA (Barbados).",
+  "scripts": {
+    "build": "node tools/build.js"
+  }
+}

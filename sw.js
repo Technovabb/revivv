@@ -10,12 +10,20 @@
  *      would happily sell someone a slot that's already gone.
  */
 
-const VERSION = 'revivv-v6';        // bump this when you change index.html
+const VERSION = 'revivv-101d4404';        // bump this when you change index.html
 const SHELL = [
   './',
   './index.html',
   './portal.html',
+  './staff.html',
   './manifest.json',
+  './assets/css/site.css',
+  './assets/css/staff.css',
+  './assets/js/app.js',
+  './assets/js/portal.js',
+  './assets/js/staff.js',
+  './images/logo.png',
+  './images/favicon.png',
   './images/app-192.png',
   './images/app-512.png',
   './images/apple-touch-icon.png'
