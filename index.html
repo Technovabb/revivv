@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#07080A">
+<meta name="theme-color" content="#F6F5F0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Revivv">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="images/favicon.png">
 <link rel="preload" as="image" href="images/ext-after.jpg">
-<link rel="stylesheet" href="assets/css/site.css?v=aa0eba6c">
+<link rel="stylesheet" href="assets/css/site.css?v=0ab3a967">
 
 </head>
 <body id="top" class="page-home">
@@ -26,7 +26,7 @@
   <div class="wrap nav">
     <a href="index.html" class="mark" aria-label="Revivv — home"><img src="images/logo.png" alt="Revivv" width="130" height="34"></a>
     <nav aria-label="Primary">
-      <ul>
+      <ul id="primary-menu">
         <li><a class="navlink" href="how.html">How it works</a></li>
         <li><a class="navlink" href="packages.html">Packages</a></li>
         <li><a class="navlink" href="work.html">The work</a></li>
@@ -36,6 +36,7 @@
         <li class="keep"><a class="btn-sm" href="quote.html#book">Book now</a></li>
       </ul>
     </nav>
+    <button class="menu-button" type="button" aria-expanded="false" aria-controls="primary-menu">Menu</button>
   </div>
 </header>
 
@@ -52,12 +53,15 @@
       <a class="btn btn-primary" href="quote.html">Build your quote</a>
       <a class="btn btn-ghost" href="packages.html">See the packages</a>
     </div>
-    <div class="hero-strip">
-      <div><b>Mobile detailing</b>Can't come to us? We'll come to you</div>
-      <div><b>Car · SUV · Truck</b>Priced for the vehicle, not guessed</div>
-      <div><b>Instant quote</b>Full price before you book</div>
-      <div><b>Pick your slot</b>Live calendar, no phone tag</div>
-    </div>
+  </div>
+  <div class="hero-proof"><strong>Restore · Protect · Maintain</strong><span>Also mobile — if you can't come to us, we'll come to you.</span></div>
+</section>
+<section class="trust-strip">
+  <div class="wrap trust-grid">
+    <div class="trust-item"><b>Mobile detailing</b>Can't come to us? We'll come to you</div>
+    <div class="trust-item"><b>Car · SUV · Truck</b>Priced for the vehicle, not guessed</div>
+    <div class="trust-item"><b>Instant quote</b>Full price before you book</div>
+    <div class="trust-item"><b>Pick your slot</b>Live calendar, no phone tag</div>
   </div>
 </section>
 
@@ -86,7 +90,7 @@
         <p>Real before-and-after results, from real driveways.</p>
         <span class="tile-go">See the work →</span>
       </a>
-      <a class="tile" href="quote.html">
+      <a class="tile featured" href="quote.html">
         <span class="tile-n">04</span>
         <h3>Instant quote</h3>
         <p>See your exact price and book a slot in under a minute.</p>
@@ -139,7 +143,7 @@
       </a>
     </div>
   </div>
-  <div class="wrap legal">© <span id="yr2"></span> Revivv Vehicle Detailing. <span style="color:#333">vaa0eba6c</span> · Also mobile — if you can't come to us, we'll come to you.</div>
+  <div class="wrap legal">© <span id="yr2"></span> Revivv Vehicle Detailing. <span>v0ab3a967</span> · Also mobile — if you can't come to us, we'll come to you.</div>
   <div class="wrap legal hide">© <span id="yr"></span> Revivv Vehicle Detailing. Also mobile — if you can't come to us, we'll come to you.</div>
 </footer>
 
@@ -150,6 +154,20 @@
 (function(){
   var y = new Date().getFullYear();
   ['yr','yr2'].forEach(function(id){ var e = document.getElementById(id); if (e) e.textContent = y; });
+  // phone menu: the Menu button opens the full page list
+  var btn = document.querySelector('.menu-button'), hd = btn && btn.closest('header');
+  if (btn && hd) {
+    var setMenu = function(open){
+      hd.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Close' : 'Menu';
+      document.body.classList.toggle('menu-open', open);
+    };
+    btn.addEventListener('click', function(){ setMenu(!hd.classList.contains('open')); });
+    hd.querySelectorAll('nav a').forEach(function(a){ a.addEventListener('click', function(){ setMenu(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && hd.classList.contains('open')) { setMenu(false); btn.focus(); } });
+    window.matchMedia('(min-width:901px)').addEventListener('change', function(e){ if (e.matches) setMenu(false); });
+  }
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
   }

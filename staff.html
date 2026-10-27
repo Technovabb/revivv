@@ -9,16 +9,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#07080A">
+<meta name="theme-color" content="#F6F5F0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Revivv">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="images/favicon.png">
 
-<link rel="stylesheet" href="assets/css/site.css?v=aa0eba6c">
-<link rel="stylesheet" href="assets/css/staff.css?v=aa0eba6c">
+<link rel="stylesheet" href="assets/css/site.css?v=0ab3a967">
+<link rel="stylesheet" href="assets/css/staff.css?v=0ab3a967">
 </head>
 <body id="top" class="page-staff">
 
@@ -130,11 +130,25 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/staff.js?v=aa0eba6c"></script>
+<script src="assets/js/staff.js?v=0ab3a967"></script>
 <script>
 (function(){
   var y = new Date().getFullYear();
   ['yr','yr2'].forEach(function(id){ var e = document.getElementById(id); if (e) e.textContent = y; });
+  // phone menu: the Menu button opens the full page list
+  var btn = document.querySelector('.menu-button'), hd = btn && btn.closest('header');
+  if (btn && hd) {
+    var setMenu = function(open){
+      hd.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Close' : 'Menu';
+      document.body.classList.toggle('menu-open', open);
+    };
+    btn.addEventListener('click', function(){ setMenu(!hd.classList.contains('open')); });
+    hd.querySelectorAll('nav a').forEach(function(a){ a.addEventListener('click', function(){ setMenu(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && hd.classList.contains('open')) { setMenu(false); btn.focus(); } });
+    window.matchMedia('(min-width:901px)').addEventListener('change', function(e){ if (e.matches) setMenu(false); });
+  }
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
   }

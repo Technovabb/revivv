@@ -11,7 +11,22 @@ const LIVE = SUPABASE_URL.indexOf("supabase.co") > -1;
 /* The 6th-stamp reward. Change this one number to change the offer
    everywhere — quote, stamp card and the rules copy read from it. */
 const REWARD_OFF = 0.50;
-const sb   = LIVE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const sb   = LIVE && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+/* ===== is the booking database reachable? =====
+   A paused free-plan Supabase project drops off DNS entirely, so every call
+   fails with a network error (status 0). When that happens the page says so
+   and hands bookings to WhatsApp/phone, instead of showing every slot as free. */
+let offline = !sb;
+const isDown = r => !!(r && r.error) && (!r.status || r.status >= 500);
+function goOffline(){
+  offline = true;
+  ["offlineNote", "portalOffline"].forEach(id => document.getElementById(id)?.classList.remove("hide"));
+  const send = document.getElementById("submitBtn");
+  if (send) send.textContent = "Send request on WhatsApp";
+  const signIn = document.getElementById("signInBtn");
+  if (signIn) signIn.disabled = true;
+}
 
 /* the site's slot labels <-> the database enum */
 const SLOT_ID = { "Priority slot":"priority", "Morning":"morning",
@@ -290,6 +305,7 @@ bindEyes();
 async function portalAction(){
   portalErr.textContent = ""; portalErr.style.color = "";
   if (!LIVE){ portalErr.textContent = "The portal isn't connected yet."; return; }
+  if (offline) return;
 
   const email = emailIn.value.trim();
   const pass  = passIn.value;
@@ -346,11 +362,11 @@ document.getElementById("pwBtn").addEventListener("click", () => {
 });
 
 document.getElementById("pwSave").addEventListener("click", async () => {
-  pwMsg.style.color = "#FF6B6B";
+  pwMsg.style.color = "var(--red)";
   if (newPw.value.length < 8){ pwMsg.textContent = "At least 8 characters."; return; }
   const { error } = await sb.auth.updateUser({ password: newPw.value });
   if (error){ pwMsg.textContent = error.message; return; }
-  pwMsg.style.color = "var(--blue)";
+  pwMsg.style.color = "var(--blue-deep)";
   pwMsg.textContent = "Password changed.";
   newPw.value = "";
 });
@@ -360,6 +376,7 @@ document.getElementById("pwSave").addEventListener("click", async () => {
 document.getElementById("forgotBtn").addEventListener("click", async () => {
   const email = emailIn.value.trim();
   portalErr.style.color = "";
+  if (offline){ portalErr.textContent = "Rewards sign-in is offline right now."; return; }
   if (!email.includes("@")){
     portalErr.textContent = "Type your email above first, then tap Forgot password.";
     return;
@@ -368,7 +385,7 @@ document.getElementById("forgotBtn").addEventListener("click", async () => {
     redirectTo: location.origin + location.pathname + "#rewards"
   });
   if (error){ portalErr.textContent = error.message; return; }
-  portalErr.style.color = "var(--blue)";
+  portalErr.style.color = "var(--blue-deep)";
   portalErr.textContent = "If that email has an account, a reset link is on its way.";
 });
 
@@ -414,8 +431,10 @@ const SLOTS = [
 ];
 const RevivvSchedule = {
   async getTakenSlots(iso){
-    if (!LIVE) return [];
-    const { data, error } = await sb.rpc("slots_taken", { d: iso });
+    if (!LIVE || offline) return [];
+    const res = await sb.rpc("slots_taken", { d: iso });
+    if (isDown(res)){ goOffline(); return []; }
+    const { data, error } = res;
     if (error){ console.error(error); return []; }
     return (data || []).map(r => typeof r === "string" ? r : r.slots_taken);
   }
@@ -466,7 +485,7 @@ async function renderSlots(key){
   const isGold = customer && tierOf(customer).key === "gold";
 
   const rows = SLOTS.filter(s => !s.goldOnly || isGold).map(s => {
-    let why = s.time, off = taken.includes(s.id);
+    let why = offline ? `${s.time} · we'll confirm` : s.time, off = taken.includes(s.id);
     if (off) why = "Booked";
     else if (P.long && !s.long){ off = true; why = "Not enough time for this package"; }
     return `<button type="button" class="slot${s.goldOnly ? " gold" : ""}" data-slot="${s.label} (${s.time})" ${off ? "disabled" : ""}>
@@ -474,6 +493,7 @@ async function renderSlots(key){
   }).join("");
 
   slotList.innerHTML = `<p class="head">${pretty(date)}</p>${rows}` +
+    (offline ? `<p class="slot-empty">We can't see live availability right now, so pick the time you'd like and we'll confirm it on WhatsApp.</p>` : "") +
     (P.long ? `<p class="slot-empty">${P.label} needs a longer block, so only the full sessions are offered.</p>` : "");
 }
 
@@ -524,6 +544,30 @@ const form = document.getElementById("bookingForm");
 const msg  = document.getElementById("formMsg");
 const submitBtn = document.getElementById("submitBtn");
 
+/* Database offline: the whole request goes to WhatsApp instead. */
+function sendOnWhatsApp(){
+  const f = Object.fromEntries(new FormData(form));
+  const when = f.preferred_date ? pretty(new Date(f.preferred_date + "T00:00:00")) : "";
+  const text = [
+    "Hi Revivv, I'd like to book a detail.", "",
+    f.quote_summary,
+    `Preferred: ${when}, ${f.preferred_time}`,
+    `Name: ${f.name}`, `Phone: ${f.phone}`, `Email: ${f.email}`,
+    `Where: ${whereSel.selectedOptions[0].text}`, `Parish: ${f.parish}`,
+    f.address ? `Address: ${f.address}` : null,
+    `Vehicle: ${f.vehicle_description}`,
+    f.referral ? `Referral code: ${f.referral}` : null,
+    f.notes ? `Notes: ${f.notes}` : null
+  ].filter(x => x !== null).join("\n");
+  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+  window.open(url, "_blank", "noopener");
+  // popups can be blocked, so always leave a link to finish the hand-off
+  const link = (href, label) => Object.assign(document.createElement("a"), { href, textContent: label, target: "_blank", rel: "noopener" });
+  msg.className = "ok";
+  msg.replaceChildren("WhatsApp should open with your request ready to send. Your slot is confirmed once we reply. Didn't open? ",
+    link(url, "Open WhatsApp"), " or ", link("tel:+12462608228", "call 1-246-260-8228"), ".");
+}
+
 form.addEventListener("submit", async e => {
   e.preventDefault();
   msg.className = ""; msg.style.color = "";
@@ -539,6 +583,7 @@ form.addEventListener("submit", async e => {
     msg.textContent = "Bookings aren't connected yet — call 1-246-260-8228 or use WhatsApp.";
     return;
   }
+  if (offline){ sendOnWhatsApp(); return; }
 
   msg.textContent = "Sending…";
   submitBtn.disabled = true;
@@ -548,7 +593,7 @@ form.addEventListener("submit", async e => {
     const slot = slotIdFrom(f.preferred_time || "");
     if (!slot) throw new Error("Pick a slot first.");
 
-    const { error } = await sb.rpc("create_booking", {
+    const res = await sb.rpc("create_booking", {
       p_name:         f.name,
       p_email:        f.email,
       p_phone:        f.phone,
@@ -565,6 +610,12 @@ form.addEventListener("submit", async e => {
       p_notes:        f.notes || null,
       p_referral:     f.referral || null
     });
+
+    if (isDown(res)){
+      goOffline();
+      throw new Error("We couldn't reach the booking system just now. Tap “Send request on WhatsApp” to send it that way, or call 1-246-260-8228.");
+    }
+    const { error } = res;
 
     if (error){
       // The database itself refused — somebody took the slot mid-form.
@@ -609,13 +660,17 @@ async function checkRef(){
     refMsg.textContent = "Got a code from a friend? You both get $25 once your first detail is done.";
     return;
   }
-  if (!LIVE) return;
+  if (!LIVE || offline){
+    refMsg.style.color = "var(--dim)";
+    refMsg.textContent = "We can't check codes right now — it'll go with your request.";
+    return;
+  }
   const { data, error } = await sb.rpc("check_referral", { p_code: code });
   if (error || !data){
-    refMsg.style.color = "#FF6B6B";
+    refMsg.style.color = "var(--red)";
     refMsg.textContent = "We don't recognise that code — check it, or leave it blank.";
   } else {
-    refMsg.style.color = "var(--blue)";
+    refMsg.style.color = "var(--blue-deep)";
     refMsg.textContent = `Referred by ${data}. You'll both get $25 once this detail is done.`;
   }
 }
@@ -695,3 +750,17 @@ document.getElementById("yr").textContent  = new Date().getFullYear();
 document.getElementById("yr2").textContent = new Date().getFullYear();
 renderCalendar();
 update();
+
+/* Check the database once on load. If it can't be reached (or takes over
+   8 seconds), switch the page to WhatsApp booking. */
+(async () => {
+  if (!offline){
+    const res = await Promise.race([
+      sb.rpc("slots_taken", { d: isoOf(today) }),
+      new Promise(r => setTimeout(() => r({ error:{ message:"timed out" }, status:0 }), 8000))
+    ]);
+    if (!isDown(res)) return;
+  }
+  goOffline();
+  if (selectedISO) renderSlots(selectedISO);
+})();
