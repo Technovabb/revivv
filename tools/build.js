@@ -49,7 +49,7 @@ const business = {
   url: SITE_URL,
   logo: SITE_URL + 'images/app-512.png',
   image: SITE_URL + SHARE_IMAGE,
-  description: 'Mobile and drop-off vehicle detailing in Barbados. Four packages priced for cars, SUVs and trucks.',
+  description: 'Mobile and drop-off car detailing in Barbados. Four packages priced for cars, SUVs and trucks.',
   slogan: 'Restore · Protect · Maintain',
   telephone: '+1-246-260-8228',
   address: { '@type': 'PostalAddress', addressCountry: 'BB' },
