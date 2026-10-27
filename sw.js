@@ -10,7 +10,7 @@
  *      would happily sell someone a slot that's already gone.
  */
 
-const VERSION = 'revivv-0ab3a967';        // bump this when you change index.html
+const VERSION = 'revivv-18ab0384';        // bump this when you change index.html
 const SHELL = [
   './',
   './how.html',

@@ -1,8 +1,22 @@
 
 const SUPABASE_URL      = "https://mikotrcqvkfgvcnghskn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Eq-EhSVu-ph3DisH5pbKuw_40jOYDzp";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const REWARD_OFF = 0.50;
+
+/* Is the database reachable? A paused Supabase project drops off DNS, so every
+   call fails with status 0. Then sign-in is switched off with a plain message
+   instead of raw errors. */
+let offline=!sb;
+const isDown=r=>!!(r&&r.error)&&(!r.status||r.status>=500);
+const authDown=e=>!!e&&(e.name==="AuthRetryableFetchError"||!e.status||e.status>=500);
+function goOffline(){
+  offline=true;
+  document.getElementById("portalOffline").classList.remove("hide");
+  document.getElementById("signInBtn").disabled=true;
+  document.getElementById("forgotBtn").disabled=true;
+  const err=document.getElementById("portalErr");err.className="msg";err.textContent="";
+}
 
 const PACKAGES = {
   exterior:{label:"The Express Exterior",price:{car:90,suv:110,truck:130},tier:1,long:false},
@@ -23,9 +37,12 @@ let customer=null;
 
 /* ---------- account ---------- */
 async function getAccount(){
+  if(!sb||offline) return null;
   const {data:{session}}=await sb.auth.getSession();
   if(!session) return null;
-  const {data,error}=await sb.rpc("my_account");
+  const res=await sb.rpc("my_account");
+  if(isDown(res)){goOffline();return null;}
+  const {data,error}=res;
   if(error||!data) return null;
   return {name:data.name,since:data.since,stamps:data.stamps,credit:Number(data.credit),
     referral:data.referral,tier:data.tier,discount:Number(data.discount),
@@ -84,6 +101,7 @@ function setMode(s){
 modeBtn.addEventListener("click",()=>setMode(!signUp));
 
 async function doAuth(){
+  if(offline) return;
   portalErr.className="msg";portalErr.textContent="";
   const email=emailIn.value.trim(),pass=passIn.value;
   if(!email.includes("@")){portalErr.className="msg err";portalErr.textContent="Enter your email.";return;}
@@ -93,17 +111,18 @@ async function doAuth(){
   try{
     const {error}=signUp?await sb.auth.signUp({email,password:pass}):await sb.auth.signInWithPassword({email,password:pass});
     if(error){
+      if(authDown(error)){goOffline();return;}
       if(/already registered/i.test(error.message)) throw new Error("There's already a password on that email — sign in instead.");
       if(/invalid login/i.test(error.message)) throw new Error("Wrong email or password.");
       throw new Error(error.message);
     }
     const acct=await getAccount();
-    if(!acct){portalErr.className="msg err";portalErr.textContent="Signed in, but no bookings on that email yet. Book a detail and it'll link up.";return;}
+    if(!acct){if(offline)return;portalErr.className="msg err";portalErr.textContent="Signed in, but no bookings on that email yet. Book a detail and it'll link up.";return;}
     customer=acct;
     if(!document.getElementById("phone").value) document.getElementById("phone").value="";
     showAccount();
   }catch(err){portalErr.className="msg err";portalErr.textContent=err.message;}
-  finally{signInBtn.disabled=false;signInBtn.textContent=signUp?"Create account":"Sign in";}
+  finally{signInBtn.disabled=offline;signInBtn.textContent=signUp?"Create account":"Sign in";}
 }
 signInBtn.addEventListener("click",doAuth);
 emailIn.addEventListener("keydown",e=>{if(e.key==="Enter")passIn.focus();});
@@ -112,9 +131,10 @@ pass2In.addEventListener("keydown",e=>{if(e.key==="Enter")doAuth();});
 
 document.getElementById("forgotBtn").addEventListener("click",async()=>{
   const email=emailIn.value.trim();portalErr.className="msg";
+  if(offline) return;
   if(!email.includes("@")){portalErr.className="msg err";portalErr.textContent="Type your email above first.";return;}
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
-  if(error){portalErr.className="msg err";portalErr.textContent=error.message;return;}
+  if(error){if(authDown(error)){goOffline();return;}portalErr.className="msg err";portalErr.textContent=error.message;return;}
   portalErr.className="msg ok";portalErr.textContent="If that email has an account, a reset link is on its way.";
 });
 
@@ -187,7 +207,8 @@ const SLOTS=[
   {id:"afternoon",label:"Afternoon",time:"12:00pm – 4:00pm",goldOnly:false,long:true},
   {id:"late",label:"Late afternoon",time:"4:00pm – 6:00pm",goldOnly:false,long:false}
 ];
-async function slotsTaken(iso){const {data,error}=await sb.rpc("slots_taken",{d:iso});
+async function slotsTaken(iso){const res=await sb.rpc("slots_taken",{d:iso});
+  if(isDown(res))return null;const {data,error}=res;
   if(error)return[];return(data||[]).map(r=>typeof r==="string"?r:r.slots_taken);}
 
 const calGrid=document.getElementById("calGrid"),calMonth=document.getElementById("calMonth"),
@@ -214,6 +235,7 @@ async function renderSlots(key){
   const date=new Date(key+"T00:00:00");
   slotList.innerHTML='<p class="head" style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">'+pretty(date)+'</p><p class="slot-empty">Checking…</p>';
   const taken=await slotsTaken(key);
+  if(!taken){slotList.innerHTML='<p class="slot-empty">We can’t check availability right now. Try again shortly, or call 1-246-260-8228.</p>';return;}
   const P=PACKAGES[document.querySelector('input[name="pkg"]:checked').value];
   const isGold=customer&&tierOf(customer).key==="gold";
   const rows=SLOTS.filter(s=>!s.goldOnly||isGold).map(s=>{
@@ -248,9 +270,10 @@ bookBtn.addEventListener("click",async()=>{
   bookMsg.textContent="Sending…";bookBtn.disabled=true;
   try{
     const q=window._quote;
-    const {error}=await sb.rpc("create_booking",{
+    const {data:{session}}=await sb.auth.getSession();
+    const res=await sb.rpc("create_booking",{
       p_name:customer.name,
-      p_email:(await sb.auth.getUser()).data.user.email,
+      p_email:session?.user?.email,
       p_phone:phone,p_date:selectedISO,p_slot:slotIdFrom(selectedSlot),
       p_vehicle_type:q.vehicle,p_vehicle_desc:vdesc,p_package:q.package,
       p_addons:q.addons||null,p_total:Number(q.total),
@@ -258,6 +281,8 @@ bookBtn.addEventListener("click",async()=>{
       p_address:addr||null,p_notes:document.getElementById("notes").value.trim()||null,
       p_referral:null
     });
+    if(isDown(res))throw new Error("We couldn't reach the booking system just now. Try again shortly, or call 1-246-260-8228.");
+    const {error}=res;
     if(error){if(/just taken|duplicate|unique/i.test(error.message))throw new Error("That slot was just taken. Pick another.");throw new Error(error.message);}
     bookMsg.className="msg ok";bookMsg.textContent="Booking sent! We'll confirm your slot shortly.";
     selectedISO=null;selectedSlot=null;renderCalendar();
@@ -295,4 +320,12 @@ if ("serviceWorker" in navigator && location.protocol === "https:"){
 
 /* ---------- boot ---------- */
 renderCalendar();
-(async()=>{const acct=await getAccount();if(acct){customer=acct;showAccount();}})();
+(async()=>{
+  if(!offline){
+    const res=await Promise.race([sb.rpc("slots_taken",{d:isoOf(today)}),
+      new Promise(r=>setTimeout(()=>r({error:{message:"timed out"},status:0}),8000))]);
+    if(isDown(res))offline=true;
+  }
+  if(offline){goOffline();return;}
+  const acct=await getAccount();if(acct){customer=acct;showAccount();}
+})();
