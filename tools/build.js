@@ -14,6 +14,8 @@ const path = require('path');
 const crypto = require('crypto');
 
 const SITE_NAME = 'Revivv Vehicle Detailing';
+const SITE_URL = 'https://revivvbb.com/';   // must match the CNAME file
+const SHARE_IMAGE = 'images/ext-after.jpg';  // 1400x1050, shown when a page is shared
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const PAGES = path.join(SRC, 'pages');
@@ -39,7 +41,53 @@ h.update(fs.readFileSync(path.join(ROOT, 'assets/css/site.css')));
 jsFiles.forEach(f => h.update(fs.readFileSync(path.join(jsDir, f))));
 const version = h.digest('hex').slice(0, 8);
 
+// Business details for search engines (home page only). Facts as shown on the site.
+const business = {
+  '@context': 'https://schema.org',
+  '@type': 'AutoWash',
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: SITE_URL + 'images/app-512.png',
+  image: SITE_URL + SHARE_IMAGE,
+  description: 'Mobile and drop-off vehicle detailing in Barbados. Four packages priced for cars, SUVs and trucks.',
+  slogan: 'Restore · Protect · Maintain',
+  telephone: '+1-246-260-8228',
+  address: { '@type': 'PostalAddress', addressCountry: 'BB' },
+  areaServed: { '@type': 'Country', name: 'Barbados' },
+  priceRange: 'BBD $90–$300',
+  currenciesAccepted: 'BBD',
+  sameAs: ['https://instagram.com/revivv.bb'],
+  openingHoursSpecification: [{
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    opens: '08:00', closes: '18:00'
+  }]
+};
+
+// Canonical link + share tags, or noindex for private pages (meta "noindex": true).
+function seoTags(rel, meta, title) {
+  if (meta.noindex) return '<meta name="robots" content="noindex">';
+  const url = SITE_URL + (rel === 'index.html' ? '' : rel);
+  const tags = [
+    `<link rel="canonical" href="${url}">`,
+    '<meta property="og:type" content="website">',
+    `<meta property="og:site_name" content="${esc(SITE_NAME)}">`,
+    `<meta property="og:title" content="${esc(title)}">`,
+    `<meta property="og:description" content="${esc(meta.description || '')}">`,
+    `<meta property="og:url" content="${url}">`,
+    `<meta property="og:image" content="${SITE_URL + SHARE_IMAGE}">`,
+    '<meta property="og:image:width" content="1400">',
+    '<meta property="og:image:height" content="1050">',
+    '<meta property="og:image:alt" content="A freshly detailed car by Revivv">',
+    '<meta property="og:locale" content="en_BB">',
+    '<meta name="twitter:card" content="summary_large_image">'
+  ];
+  if (rel === 'index.html') tags.push(`<script type="application/ld+json">${JSON.stringify(business).replace(/</g, '\\u003c')}</script>`);
+  return tags.join('\n');
+}
+
 const built = [];
+const indexable = [];
 for (const rel of fs.readdirSync(PAGES).filter(f => f.endsWith('.html'))) {
   const raw = fs.readFileSync(path.join(PAGES, rel), 'utf8');
   const m = raw.match(/^\s*<!--meta\s*([\s\S]*?)-->/);
@@ -56,13 +104,18 @@ for (const rel of fs.readdirSync(PAGES).filter(f => f.endsWith('.html'))) {
   const footer = isApp ? '' : includes('<!--include footer-->');
   const installbar = isApp ? '' : includes('<!--include install-bar-->');
 
+  const title = meta.title ? `${meta.title} — ${SITE_NAME}` : `${SITE_NAME} — Barbados`;
+  const seo = seoTags(rel, meta, title);
+  if (!meta.noindex) indexable.push(rel);
+
   let html = includes(layout).replace('{{content}}', () => body);
   html = html
+    .replace(/\{\{seo\}\}/g, () => seo)
     .replace(/\{\{nav\}\}/g, () => nav)
     .replace(/\{\{footer\}\}/g, () => footer)
     .replace(/\{\{installbar\}\}/g, () => installbar)
     .replace(/\{\{styles\}\}/g, () => styles)
-    .replace(/\{\{title\}\}/g, esc(meta.title ? `${meta.title} — ${SITE_NAME}` : `${SITE_NAME} — Barbados`))
+    .replace(/\{\{title\}\}/g, esc(title))
     .replace(/\{\{description\}\}/g, esc(meta.description || ''))
     .replace(/\{\{bodyClass\}\}/g, meta.bodyClass || '')
     .replace(/\{\{active:(\w+)\}\}/g, (x, key) => (meta.nav === key ? ' is-active' : ''))
@@ -75,6 +128,14 @@ for (const rel of fs.readdirSync(PAGES).filter(f => f.endsWith('.html'))) {
   fs.writeFileSync(path.join(ROOT, rel), html);
   built.push(rel);
 }
+
+// sitemap.xml lists every public page, home first. robots.txt points search engines to it.
+indexable.sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)));
+fs.writeFileSync(path.join(ROOT, 'sitemap.xml'),
+  '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+  indexable.map(rel => `  <url><loc>${SITE_URL + (rel === 'index.html' ? '' : rel)}</loc></url>`).join('\n') +
+  '\n</urlset>\n');
+fs.writeFileSync(path.join(ROOT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n`);
 
 // Update the service worker: new VERSION (busts the cache) + a SHELL list of files
 // that actually exist (addAll is atomic — a missing file would break install).
