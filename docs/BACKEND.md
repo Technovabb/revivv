@@ -65,11 +65,15 @@ To switch email on (the same way the H&R app sends mail):
 3. **Fill in the settings.** Put the tenant ID, client ID, secret and sender in `/etc/revivv-api.env`, and set `MAIL_MODE=graph`.
 4. **Restart the API:** `systemctl restart revivv-api`.
 
-## Bringing the old Supabase data across
+## The old Supabase data (done 28 Oct 2026)
 
-👤 In the Supabase dashboard, either restore the paused project or download its backup file. Then hand the file to Claude:
-- the script copies customers, stamps, credit, referrals, bookings and staff;
-- customers' passwords carry over: the old bcrypt hashes are upgraded the first time each person signs in.
+The old data was copied across once, from Supabase's final backup of the paused project:
+- 5 logins, 3 staff (Juwan, Nick Stapleton, Stefon Walrond), 2 customers and 2 completed bookings;
+- everyone keeps their old password: the old bcrypt hashes are upgraded the first time each person signs in.
+
+That backup is kept on the server as `/var/backups/revivv/supabase-final-2026-10-08.sql.gz` (the nightly clean-up leaves it alone). Supabase is no longer needed.
+
+The script was `server/src/import-supabase.js`. It only writes into an empty database, so it can't run twice by mistake.
 
 ## How it behaves
 
