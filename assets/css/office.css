@@ -3,6 +3,8 @@
 .page-office{--amber:#F2B233;--purple:#A78BFA;--cyan:#22D3EE;--r:12px;
   background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;padding-bottom:5rem}
 .page-office *{box-sizing:border-box}
+/* site.css lays every form out in two columns (for the booking form); not here */
+.page-office form{display:block;max-width:none}
 .page-office a{color:var(--blue-lt)}
 .hide{display:none !important}
 .muted{color:var(--muted)}
