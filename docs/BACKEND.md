@@ -19,7 +19,7 @@ Revivv's own server replaced Supabase on 28 Oct 2026. It holds customer accounts
 | `revivv-api.service` | the API, on 127.0.0.1:4380 |
 | `/etc/revivv-api.env` | settings, including the email secret once set (never in git) |
 | database `revivv` | owned by the `revivv` system user, no password (local sign-in only) |
-| `/etc/caddy/Caddyfile` | the `api.revivvbb.com` block at the end gives it HTTPS |
+| `/etc/caddy/Caddyfile` | shared with H&R; the `api.revivvbb.com` block at the end gives it HTTPS. If H&R's setup ever rewrites this file, add `deploy/Caddyfile.revivv` back to the end |
 | `revivv-backup.timer` | nightly database copy at 3:40am, kept 30 days in `/var/backups/revivv` |
 
 ## Updating the server
