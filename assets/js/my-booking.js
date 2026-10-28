@@ -180,7 +180,8 @@
     if (!talk) {
       talk = chat({
         links: !byKey,
-        intro: "This is your whole conversation with Revivv. We usually reply within a few hours, Monday to Saturday.",
+        intro: (byKey ? "Messages about this booking." : "This is your whole conversation with Revivv.") +
+          " We usually reply within a few hours, Monday to Saturday.",
         send: body => (byKey ? call("booking_send", { ref, k, body }) : call("my_send", { ref, body }))
       });
     }

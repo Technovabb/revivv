@@ -105,10 +105,13 @@ button.item{width:100%;text-align:left;font:inherit;cursor:pointer}
 /* forms */
 .field{display:grid;gap:.3rem;margin-bottom:.8rem}
 .field label,.lbl{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-.page-office input:not([type=checkbox]):not([type=radio]),.page-office select,.page-office textarea{width:100%;background:var(--bg-2);
+.page-office input:not([type=checkbox]):not([type=radio]):not([type=file]),.page-office select,.page-office textarea{width:100%;background:var(--bg-2);
   border:1px solid var(--line-2);border-radius:9px;padding:.7rem .85rem;color:var(--text);font-family:var(--body);font-size:1rem;min-height:44px}
 .page-office textarea{min-height:90px;resize:vertical}
 .page-office input:focus,.page-office select:focus,.page-office textarea:focus{outline:2px solid var(--blue);border-color:transparent}
+/* grid children and date boxes may shrink below their built-in width on small phones */
+.field{min-width:0}
+.page-office input[type=date],.page-office input[type=time]{min-width:0;max-width:100%}
 .grid2{display:grid;gap:0 .8rem;grid-template-columns:1fr}
 @media(min-width:620px){.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr 1fr}}
 .grid3{display:grid;gap:0 .8rem}
@@ -148,6 +151,7 @@ button.item{width:100%;text-align:left;font:inherit;cursor:pointer}
 /* timeline */
 .tl{list-style:none;padding:0;margin:0;display:grid;gap:.5rem;font-size:.82rem}
 .tl li{display:grid;grid-template-columns:auto 1fr;gap:.6rem;color:var(--muted)}
+.page-office .card .tl li::before{content:none}
 .tl li b{color:var(--text);font-weight:600}
 .tl time{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
 
@@ -202,7 +206,7 @@ button.item{width:100%;text-align:left;font:inherit;cursor:pointer}
 .week a em{display:block;font-style:normal;font-size:.7rem;color:var(--blue-lt)}
 
 /* dialogs and toast */
-dialog.dlg{border:1px solid var(--line-2);border-radius:14px;background:var(--panel);color:var(--text);padding:1.2rem;width:min(520px,100% - 24px);max-height:90vh}
+dialog.dlg{border:1px solid var(--line-2);border-radius:14px;background:var(--panel);color:var(--text);padding:1.2rem;width:min(520px,100% - 24px);max-height:90vh;margin:auto}
 dialog.dlg::backdrop{background:rgba(0,0,0,.65)}
 dialog.dlg h2{font-family:var(--title);text-transform:uppercase;font-size:1rem;margin:0 0 .9rem}
 .toast{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);background:#fff;color:#07111D;padding:.7rem 1.1rem;border-radius:10px;
