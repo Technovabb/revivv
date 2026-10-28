@@ -1,0 +1,2 @@
+# GitHub Pages: publish the website only, not the server code or build sources.
+exclude: [server, deploy, docs, src, tools, package.json]

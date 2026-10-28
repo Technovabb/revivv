@@ -1,0 +1,7 @@
+# Added to the end of /etc/caddy/Caddyfile on the shared server (docs/BACKEND.md).
+# Caddy gets and renews the HTTPS certificate itself once api.revivvbb.com
+# points at this server. No access log: the API logs requests itself.
+api.revivvbb.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:4380
+}

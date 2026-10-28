@@ -1,0 +1,11 @@
+# /etc/systemd/system/revivv-backup.timer: 3:40am Barbados time (07:40 UTC)
+[Unit]
+Description=Nightly Revivv database backup
+
+[Timer]
+OnCalendar=*-*-* 07:40:00 UTC
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

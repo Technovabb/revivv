@@ -1,21 +1,18 @@
 
-/* ===== YOUR TWO KEYS — paste them here =====
-   Supabase → Project Settings → API
-   The anon key is MEANT to be public. It is not a password.
-   Never put the service_role key here. */
-const SUPABASE_URL      = "https://mikotrcqvkfgvcnghskn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Eq-EhSVu-ph3DisH5pbKuw_40jOYDzp";
-
-const LIVE = SUPABASE_URL.indexOf("supabase.co") > -1;
+/* ===== Revivv server =====
+   Accounts, bookings and rewards live on Revivv's own server (see
+   assets/js/api.js and server/). Without it the page still quotes, and
+   bookings go to WhatsApp. */
+const LIVE = !!window.revivvApi;
 
 /* The 6th-stamp reward. Change this one number to change the offer
    everywhere — quote, stamp card and the rules copy read from it. */
 const REWARD_OFF = 0.50;
-const sb   = LIVE && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const sb   = LIVE ? window.revivvApi : null;
 
 /* ===== is the booking database reachable? =====
-   A paused free-plan Supabase project drops off DNS entirely, so every call
-   fails with a network error (status 0). When that happens the page says so
+   If the server can't be reached, every call fails with a network error
+   (status 0). When that happens the page says so
    and hands bookings to WhatsApp/phone, instead of showing every slot as free. */
 let offline = !sb;
 const isDown = r => !!(r && r.error) && (!r.status || r.status >= 500);

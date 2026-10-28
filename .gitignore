@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.env
+!deploy/*.env.template
+server/.test-db/
+server/.dev-db/

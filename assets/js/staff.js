@@ -1,9 +1,6 @@
 
-/* ===== YOUR TWO KEYS — the same two as index.html ===== */
-const SUPABASE_URL      = "https://mikotrcqvkfgvcnghskn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Eq-EhSVu-ph3DisH5pbKuw_40jOYDzp";
-
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* Revivv's own server: assets/js/api.js */
+const sb = window.revivvApi;
 
 const SLOT_LABEL = {
   priority:"Priority · 7–9am", morning:"Morning · 8am–12pm",
@@ -62,7 +59,7 @@ passIn .addEventListener("keydown", e => { if (e.key === "Enter") gateAction(); 
 
 /* Being in the staff table is the ONLY thing that makes someone staff. */
 async function enter(){
-  const { data: staffRow } = await sb.from("staff").select("name").maybeSingle();
+  const { data: staffRow } = await sb.staffMe();
   if (!staffRow){
     gateMsg.className = "msg err";
     gateMsg.textContent = "That account isn't staff. Ask to be added.";

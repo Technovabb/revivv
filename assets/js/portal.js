@@ -1,11 +1,8 @@
 
-const SUPABASE_URL      = "https://mikotrcqvkfgvcnghskn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Eq-EhSVu-ph3DisH5pbKuw_40jOYDzp";
-const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const sb = window.revivvApi || null;   // Revivv's own server: assets/js/api.js
 const REWARD_OFF = 0.50;
 
-/* Is the database reachable? A paused Supabase project drops off DNS, so every
-   call fails with status 0. Then sign-in is switched off with a plain message
+/* Is the Revivv server reachable? If not, every call fails with status 0. Then sign-in is switched off with a plain message
    instead of raw errors. */
 let offline=!sb;
 const isDown=r=>!!(r&&r.error)&&(!r.status||r.status>=500);
@@ -133,7 +130,7 @@ document.getElementById("forgotBtn").addEventListener("click",async()=>{
   const email=emailIn.value.trim();portalErr.className="msg";
   if(offline) return;
   if(!email.includes("@")){portalErr.className="msg err";portalErr.textContent="Type your email above first.";return;}
-  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace("portal.html","quote.html")+"#rewards"});
   if(error){if(authDown(error)){goOffline();return;}portalErr.className="msg err";portalErr.textContent=error.message;return;}
   portalErr.className="msg ok";portalErr.textContent="If that email has an account, a reset link is on its way.";
 });
@@ -146,7 +143,7 @@ document.getElementById("signOutBtn").addEventListener("click",async()=>{
   emailIn.value="";passIn.value="";pass2In.value="";setMode(false);
 });
 document.getElementById("copyRef").addEventListener("click",e=>{
-  navigator.clipboard.writeText(location.origin+location.pathname.replace("portal.html","index.html")+"?ref="+customer.referral);
+  navigator.clipboard.writeText(location.origin+location.pathname.replace("portal.html","quote.html")+"?ref="+customer.referral);
   e.target.textContent="Copied";setTimeout(()=>e.target.textContent="Copy link",1600);
 });
 

@@ -1,0 +1,31 @@
+# /etc/systemd/system/revivv-api.service: the Revivv API (docs/BACKEND.md).
+# Shares the DigitalOcean server with the H&R app, so it is capped at 300 MB.
+[Unit]
+Description=Revivv API (bookings, rewards, staff console)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=revivv
+Group=revivv
+WorkingDirectory=/opt/revivv/server
+EnvironmentFile=/etc/revivv-api.env
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=3
+MemoryMax=300M
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

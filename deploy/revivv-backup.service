@@ -1,0 +1,10 @@
+# /etc/systemd/system/revivv-backup.service (started nightly by revivv-backup.timer)
+[Unit]
+Description=Revivv database backup
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=revivv
+Group=revivv
+ExecStart=/bin/bash /opt/revivv/deploy/backup.sh
