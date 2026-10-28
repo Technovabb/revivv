@@ -219,7 +219,7 @@ dialog.dlg h2{font-family:var(--title);text-transform:uppercase;font-size:1rem;m
 .viewer::backdrop{background:rgba(0,0,0,.85)}
 
 /* sign in */
-.gate{max-width:400px;margin:4rem auto;text-align:center}
+.page-office .gate{max-width:400px;margin:4rem auto;text-align:center}
 .gate h1{font-family:var(--title);text-transform:uppercase;font-size:1.4rem;margin-bottom:.4rem}
 .gate p{color:var(--muted);font-size:.9rem;margin-bottom:1.4rem}
 .gate .field{text-align:left}
