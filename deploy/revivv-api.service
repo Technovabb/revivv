@@ -15,6 +15,9 @@ ExecStart=/usr/bin/node src/server.js
 Restart=always
 RestartSec=3
 MemoryMax=300M
+# job photos live in /var/lib/revivv/uploads, the only folder the API may write to
+StateDirectory=revivv
+StateDirectoryMode=0750
 
 NoNewPrivileges=true
 ProtectSystem=strict

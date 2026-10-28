@@ -46,7 +46,7 @@ function unescapeCopy(s) {
 }
 
 // The old booking statuses, in the new terms.
-const STATUS = { new: 'booked', confirmed: 'booked', completed: 'completed', cancelled: 'cancelled', no_show: 'cancelled' };
+const STATUS = { new: 'requested', confirmed: 'confirmed', completed: 'completed', cancelled: 'cancelled', no_show: 'no_show' };
 
 /*
  * Works out the new rows from the old tables. Nothing is written here.
@@ -140,13 +140,15 @@ export async function writeImport(pool, plan) {
     for (const c of plan.customers) {
       if (c.referredBy) await db.query('update customers set referred_by = $2 where id = $1', [customerId.get(c.old), customerId.get(c.referredBy)]);
     }
+    let n = 0;
     for (const b of plan.bookings) {
+      const ref = `RV-${b.booking_date.slice(2).replace(/-/g, '')}-${1000 + (++n)}`;
       await db.query(
-        `insert into bookings (customer_id, booking_date, slot, status, name, email, phone, vehicle_type, vehicle_desc,
+        `insert into bookings (ref, customer_id, booking_date, slot, status, name, email, phone, vehicle_type, vehicle_desc,
            package, addons, total, quoted_total, location, parish, address, notes, created_at, completed_at)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18)`,
+         values ($19, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18)`,
         [customerId.get(b.customer), b.booking_date, b.slot, b.status, b.name, b.email, b.phone, b.vehicle_type, b.vehicle_desc,
-         b.package, b.addons, b.total, b.location, b.parish, b.address, b.notes, b.created_at, b.completed_at]);
+         b.package, b.addons, b.total, b.location, b.parish, b.address, b.notes, b.created_at, b.completed_at, ref]);
     }
   });
 }

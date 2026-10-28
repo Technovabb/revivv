@@ -65,7 +65,7 @@ test('a booking is priced by the server and takes the slot', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.body.data.total, 110 + 25 + 80);
   const row = (await t.pool.query('select total, quoted_total, status from bookings where id = $1', [r.body.data.id])).rows[0];
-  assert.deepEqual(row, { total: 215, quoted_total: 1, status: 'booked' });
+  assert.deepEqual(row, { total: 215, quoted_total: 1, status: 'requested' });
 
   assert.deepEqual((await c.rpc('slots_taken', { d })).body.data, ['morning']);
   r = await c.rpc('create_booking', booking({ p_date: d, p_email: 'other@example.com' }));
@@ -102,7 +102,7 @@ test('staff calls need a staff account', async () => {
   assert.equal((await customer.get('/staff/me')).body.data, null);
 
   const staff = await makeStaff();
-  assert.deepEqual((await staff.get('/staff/me')).body.data, { name: 'Andre' });
+  assert.deepEqual((await staff.get('/staff/me')).body.data, { name: 'Andre', role: 'owner', email: 'staff@revivvbb.com' });
   await client(t.app).rpc('create_booking', booking({ p_date: d, p_slot: 'late', p_email: 'z@example.com', p_name: 'Zed' }));
   await client(t.app).rpc('create_booking', booking({ p_date: d, p_slot: 'morning', p_email: 'y@example.com', p_name: 'Yan', p_location: 'Mobile — we come to them', p_address: '1 Bay St' }));
   const day = (await staff.rpc('staff_day', { d })).body.data;

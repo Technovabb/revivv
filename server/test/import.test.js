@@ -61,7 +61,7 @@ test('the old Supabase data comes across with stamps, credit, referrals and pass
   assert.match(ben.referral_code, /^REVIVV-[0-9A-F]{5}$/);
 
   const b = (await t.pool.query('select * from bookings order by booking_date')).rows;
-  assert.deepEqual(b.map(x => x.status), ['completed', 'completed', 'cancelled', 'booked']);
+  assert.deepEqual(b.map(x => x.status), ['completed', 'completed', 'no_show', 'confirmed']);
   assert.equal(b[0].notes, 'Gate code\t12\nRing twice');
   assert.equal(b[0].name, 'Ana Best');
   assert.equal(b[0].total, 150);

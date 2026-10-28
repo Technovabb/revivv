@@ -4,37 +4,27 @@
  *
  * Status codes matter to the pages: 4xx is "a normal problem, show the
  * message", 5xx or no answer is "Revivv is offline, offer WhatsApp instead".
+ *
+ * Each call (POST /rpc/<name>) has an access level: public, customer (signed
+ * in), staff (owners and crew) or owner. See src/rpc/*.js.
  */
 import Fastify from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import { tx } from './db.js';
+import crypto from 'node:crypto';
 import { hashPassword, verifyPassword, burnTime, newToken, tokenHash } from './passwords.js';
-import * as R from './rules.js';
+import { fail, text, cleanEmail } from './util.js';
+import { getSettings } from './settings.js';
+import { emails } from './emails.js';
+import { createOutbox } from './outbox.js';
+import { createBookings } from './bookings.js';
+import { registerFiles } from './files.js';
+import publicRpc from './rpc/public.js';
+import accountRpc from './rpc/account.js';
+import officeRpc from './rpc/office.js';
+import ownerRpc from './rpc/owner.js';
 
 const COOKIE = 'rv_session';
 const PHONE = '1-246-260-8228';
-const STAFF_ONLY = new Set(['staff_day', 'staff_range', 'staff_find_customers', 'complete_booking', 'cancel_booking']);
-
-function fail(status, message) {
-  throw Object.assign(new Error(message), { statusCode: status });
-}
-const text = v => (v == null ? '' : String(v).trim());
-function cleanEmail(v) {
-  const e = text(v).toLowerCase();
-  return e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : '';
-}
-function maxLen(value, n, what) {
-  if (value && value.length > n) fail(400, `${what} is too long.`);
-  return value;
-}
-function bookingId(v) {
-  const id = Number(v);
-  if (!Number.isSafeInteger(id) || id <= 0) fail(400, 'Unknown booking.');
-  return id;
-}
-const likeEscape = s => s.replace(/[\\%_]/g, m => '\\' + m);
-const letters = n => Array.from({ length: n }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 24)]).join('');
-const digits = n => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');
 
 export async function buildApp({ config, pool, mailer, logger = true }) {
   const app = Fastify({
@@ -80,6 +70,7 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
   app.setErrorHandler((err, req, reply) => {
     const status = err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500;
     if (status === 500) req.log.error(err);
+    if (status === 500 && process.env.REVIVV_DEBUG) console.error(err);
     const message = status === 500 ? `Something went wrong on our side. Please try again, or call ${PHONE}.`
       : status === 429 ? 'Too many tries. Please wait a few minutes and try again.'
       : err.message;
@@ -89,7 +80,7 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
 
   /* ---------- sessions (an HttpOnly cookie; only its hash is stored) ---------- */
   const cookieTail = `; Path=/; HttpOnly; SameSite=Lax${config.production ? '; Secure' : ''}`;
-  const users = new WeakMap();
+  const actors = new WeakMap();
 
   async function startSession(reply, userId) {
     const { token, hash } = newToken();
@@ -101,24 +92,37 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
     const m = (req.headers.cookie || '').match(/(?:^|;\s*)rv_session=([A-Za-z0-9_-]+)/);
     return m ? m[1] : null;
   }
-  async function currentUser(req) {
-    if (users.has(req)) return users.get(req);
+  /*
+   * Who is asking: null when signed out, else
+   * { id, email, name, staff, role: 'owner'|'crew'|'customer', owner }.
+   */
+  async function actorFor(req) {
+    if (actors.has(req)) return actors.get(req);
     const token = cookieToken(req);
-    let user = null;
+    let actor = null;
     if (token) {
       const r = await pool.query(
-        'select u.id, u.email from sessions s join users u on u.id = s.user_id where s.token_hash = $1 and s.expires_at > now()',
-        [tokenHash(token)]);
-      user = r.rows[0] || null;
+        `select u.id, u.email, s.name, s.role from sessions x join users u on u.id = x.user_id
+           left join staff s on s.user_id = u.id
+          where x.token_hash = $1 and x.expires_at > now()`, [tokenHash(token)]);
+      const u = r.rows[0];
+      if (u) {
+        actor = { id: u.id, email: u.email, name: u.name || u.email, staff: !!u.role, role: u.role || 'customer', owner: u.role === 'owner' };
+      }
     }
-    users.set(req, user);
-    return user;
+    actors.set(req, actor);
+    return actor;
   }
-  async function staffName(user) {
-    if (!user) return null;
-    const r = await pool.query('select name from staff where user_id = $1', [user.id]);
-    return r.rows[0] ? r.rows[0].name : null;
+
+  /* ---------- shared services ---------- */
+  const outbox = createOutbox({ pool, mailer, config, log: app.log });
+  const bookings = createBookings({ pool, outbox, config });
+  async function audit(db, actor, action, detail = null) {
+    await db.query('insert into audit_log (actor_id, actor_name, action, detail) values ($1, $2, $3, $4)',
+      [actor?.id || null, actor?.name || 'Revivv', action, detail ? String(detail).slice(0, 500) : null]);
   }
+  const ctx = { pool, config, mailer, outbox, bookings, audit, site: config.siteOrigins[0] };
+  app.decorate('services', ctx);
 
   /* ---------- accounts ---------- */
   const authLimit = { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } };
@@ -153,6 +157,47 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
     return { data: { user: { email: u.email } } };
   });
 
+  // Sign in with a 6-digit code sent by email (no password needed).
+  const codeHash = (email, code) => crypto.createHash('sha256').update(`${email}:${code}`).digest();
+  app.post('/auth/code', { config: { rateLimit: { max: 5, timeWindow: '10 minutes' } } }, async req => {
+    const email = cleanEmail(req.body?.email);
+    if (!email) fail(400, 'Enter a valid email address.');
+    if (outbox.hold) fail(400, `Sign-in codes by email aren't switched on yet. Use your password, or WhatsApp ${PHONE} and we'll help.`);
+    const recent = await pool.query("select count(*)::int as n from login_codes where lower(email) = $1 and created_at > now() - interval '10 minutes'", [email]);
+    if (recent.rows[0].n >= 3) fail(429, 'Too many codes.');
+    const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+    await pool.query("insert into login_codes (email, code_hash, expires_at) values ($1, $2, now() + interval '10 minutes')", [email, codeHash(email, code)]);
+    const m = emails.code(code, await getSettings(pool));
+    try {
+      await mailer.send({ to: email, subject: m.subject, text: m.body });
+    } catch (e) {
+      req.log.error({ err: e.message }, 'code email failed');
+      fail(400, `We couldn't send the email just now. Please try again, or call ${PHONE}.`);
+    }
+    return { data: {} };
+  });
+
+  app.post('/auth/verify', authLimit, async (req, reply) => {
+    const email = cleanEmail(req.body?.email);
+    const code = text(req.body?.code).replace(/\D/g, '');
+    const row = email ? (await pool.query(
+      `select id, code_hash, tries from login_codes where lower(email) = $1 and used_at is null and expires_at > now()
+        order by id desc limit 1`, [email])).rows[0] : null;
+    if (!row) fail(400, 'That code has expired. Ask for a new one.');
+    if (row.tries >= 5) fail(400, 'Too many wrong tries. Ask for a new code.');
+    const ok = code.length === 6 && crypto.timingSafeEqual(row.code_hash, codeHash(email, code));
+    if (!ok) {
+      await pool.query('update login_codes set tries = tries + 1 where id = $1', [row.id]);
+      const left = 4 - row.tries;
+      fail(400, left > 0 ? `That code isn't right. ${left} ${left === 1 ? 'try' : 'tries'} left.` : 'Too many wrong tries. Ask for a new code.');
+    }
+    await pool.query('update login_codes set used_at = now() where id = $1', [row.id]);
+    const u = (await pool.query(
+      'insert into users (email) values ($1) on conflict ((lower(email))) do update set email = users.email returning id, email', [email])).rows[0];
+    await startSession(reply, u.id);
+    return { data: { user: { email: u.email } } };
+  });
+
   app.post('/auth/signout', async (req, reply) => {
     const token = cookieToken(req);
     if (token) await pool.query('delete from sessions where token_hash = $1', [tokenHash(token)]);
@@ -161,18 +206,18 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
   });
 
   app.get('/auth/session', async req => {
-    const user = await currentUser(req);
-    return { data: { user: user ? { email: user.email } : null } };
+    const actor = await actorFor(req);
+    return { data: { user: actor ? { email: actor.email } : null } };
   });
 
   app.post('/auth/password', authLimit, async req => {
-    const user = await currentUser(req);
-    if (!user) fail(401, 'Please sign in again.');
+    const actor = await actorFor(req);
+    if (!actor) fail(401, 'Please sign in again.');
     const hash = await hashPassword(newPassword(req.body?.password));
-    await pool.query('update users set password_hash = $2 where id = $1', [user.id, hash]);
+    await pool.query('update users set password_hash = $2 where id = $1', [actor.id, hash]);
     // sign out every other browser
-    await pool.query('delete from sessions where user_id = $1 and token_hash <> $2', [user.id, tokenHash(cookieToken(req))]);
-    return { data: { user: { email: user.email } } };
+    await pool.query('delete from sessions where user_id = $1 and token_hash <> $2', [actor.id, tokenHash(cookieToken(req))]);
+    return { data: { user: { email: actor.email } } };
   });
 
   // Where a reset link may send someone: only back to a page on the Revivv site.
@@ -187,7 +232,7 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
   app.post('/auth/reset', { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } }, async req => {
     const email = cleanEmail(req.body?.email);
     if (!email) fail(400, 'Enter a valid email address.');
-    if (!mailer.ready && config.production) fail(400, `Password reset emails aren't switched on yet. WhatsApp or call ${PHONE} and we'll help.`);
+    if (outbox.hold) fail(400, `Password reset emails aren't switched on yet. WhatsApp or call ${PHONE} and we'll help.`);
     const u = (await pool.query('select id from users where lower(email) = $1', [email])).rows[0];
     if (u) {
       const { token, hash } = newToken();
@@ -221,8 +266,8 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
   });
 
   app.get('/staff/me', async req => {
-    const name = await staffName(await currentUser(req));
-    return { data: name === null ? null : { name } };
+    const a = await actorFor(req);
+    return { data: a?.staff ? { name: a.name, role: a.role, email: a.email } : null };
   });
 
   app.get('/health', async () => {
@@ -230,215 +275,30 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
     return { ok: true };
   });
 
-  /* ---------- customer state used by my_account and pricing ---------- */
-  async function visits12(db, customerId, today) {
-    const r = await db.query(
-      "select count(*)::int as n from bookings where customer_id = $1 and status = 'completed' and booking_date > $2::date - interval '12 months'",
-      [customerId, today]);
-    return r.rows[0].n;
-  }
-  async function accountState(db, c, today) {
-    const { tier, discount } = R.tierFor(await visits12(db, c.id, today));
-    const open = await db.query("select 1 from bookings where customer_id = $1 and status = 'booked' and reward_applied limit 1", [c.id]);
-    return { tier, discount, credit: c.credit, rewardAvailable: c.stamps >= R.REWARD_AT && !open.rowCount };
-  }
-  async function newCustomer(db, { email, name, phone }) {
-    for (let i = 0; i < 10; i++) {
-      const r = await db.query(
-        'insert into customers (email, name, phone, referral_code) values ($1, $2, $3, $4) on conflict do nothing returning *',
-        [email, name, phone, `REVIVV-${letters(2)}${digits(3)}`]);
-      if (r.rows[0]) return r.rows[0];
-      const same = (await db.query('select * from customers where lower(email) = $1 for update', [email])).rows[0];
-      if (same) return same;   // made by another request a moment ago
-    }
-    throw new Error('could not make a unique referral code');
-  }
-
   /* ---------- the calls the pages make (POST /rpc/<name>) ---------- */
-  const rpc = {
-    async my_account(p, user) {
-      if (!user) fail(401, 'Please sign in again.');
-      const c = (await pool.query(
-        "select id, name, stamps, credit, referral_code, to_char(created_at at time zone $2, 'Mon YYYY') as since from customers where lower(email) = lower($1)",
-        [user.email, R.TZ])).rows[0];
-      if (!c) return null;
-      const { tier, discount } = R.tierFor(await visits12(pool, c.id, R.todayISO()));
-      const history = (await pool.query(
-        "select to_char(booking_date, 'FMDD Mon YYYY') as date, package || ' — ' || vehicle_type as job, total as paid from bookings where customer_id = $1 and status = 'completed' order by booking_date desc, id desc limit 50",
-        [c.id])).rows;
-      return { name: c.name, since: c.since, stamps: Math.min(c.stamps, R.MAX_STAMPS), credit: c.credit, referral: c.referral_code, tier, discount, history };
-    },
-
-    async slots_taken(p) {
-      if (!R.isISODate(p.d)) fail(400, 'Pick a valid date.');
-      const r = await pool.query(
-        "select slot from bookings where booking_date = $1 and status <> 'cancelled' order by array_position($2::text[], slot)",
-        [p.d, R.SLOTS]);
-      return r.rows.map(x => x.slot);
-    },
-
-    async check_referral(p) {
-      const code = text(p.p_code).toUpperCase();
-      if (!code || code.length > 40) return null;
-      const r = await pool.query('select name from customers where upper(referral_code) = $1', [code]);
-      return r.rows[0] ? r.rows[0].name.split(' ')[0] : null;
-    },
-
-    async create_booking(p, user) {
-      const name = maxLen(text(p.p_name), 100, 'Your name');
-      const email = cleanEmail(p.p_email);
-      const phone = maxLen(text(p.p_phone), 40, 'The phone number');
-      const date = text(p.p_date), slot = text(p.p_slot), vehicle = text(p.p_vehicle_type), pkg = text(p.p_package);
-      const addons = maxLen(text(p.p_addons), 300, 'The add-ons list') || null;
-      const location = text(p.p_location) || null;
-      const parish = maxLen(text(p.p_parish), 40, 'The parish') || null;
-      const address = maxLen(text(p.p_address), 300, 'The address') || null;
-      const notes = maxLen(text(p.p_notes), 1000, 'The notes') || null;
-      const vehicleDesc = maxLen(text(p.p_vehicle_desc), 120, 'The vehicle description') || null;
-      const referral = maxLen(text(p.p_referral).toUpperCase(), 40, 'The referral code') || null;
-      const quoted = p.p_total == null || p.p_total === '' || !Number.isFinite(Number(p.p_total)) ? null : Number(p.p_total);
-
-      if (!name) fail(400, 'Please enter your name.');
-      if (!email) fail(400, 'Please enter a valid email address.');
-      if (phone.replace(/\D/g, '').length < 7) fail(400, 'Please enter a phone number we can reach you on.');
-      if (!R.isISODate(date)) fail(400, 'Please pick a date.');
-      const today = R.todayISO();
-      if (date < today) fail(400, 'That date has passed. Please pick another.');
-      if (date > R.addDays(today, 366)) fail(400, 'Please pick a date within the next year.');
-      if (R.isSunday(date)) fail(400, `Sundays are by appointment. Please call ${PHONE}.`);
-      if (!R.SLOTS.includes(slot)) fail(400, 'Please pick a time.');
-      if (!Object.hasOwn(R.VEHICLES, vehicle)) fail(400, 'Please pick your vehicle type.');
-      if (!Object.hasOwn(R.PACKAGES, pkg)) fail(400, 'Please pick a package.');
-      if (R.PACKAGES[pkg].long && !R.LONG_SLOTS.includes(slot)) fail(400, 'That package takes longer, so it needs a morning or afternoon slot.');
-      if (location && !R.LOCATIONS.includes(location)) fail(400, 'Please choose mobile or drop-off.');
-      if (location && location.startsWith('Mobile') && !address) fail(400, 'Please enter the address for a mobile detail.');
-      R.addonsTotal(addons);   // refuses unknown add-ons
-
-      return tx(pool, async db => {
-        let c = (await db.query('select * from customers where lower(email) = $1 for update', [email])).rows[0];
-        if (!c) c = await newCustomer(db, { email, name, phone });
-
-        // A referral code counts only for someone who hasn't had a detail yet.
-        if (referral && !c.referred_by) {
-          const ref = (await db.query('select id from customers where upper(referral_code) = $1', [referral])).rows[0];
-          const before = await db.query("select 1 from bookings where customer_id = $1 and status = 'completed' limit 1", [c.id]);
-          if (ref && ref.id !== c.id && !before.rowCount) await db.query('update customers set referred_by = $2 where id = $1', [c.id, ref.id]);
-        }
-
-        // Rewards, tier discount and credit only for the signed-in owner of this email.
-        const account = user && user.email.toLowerCase() === email ? await accountState(db, c, today) : null;
-        if (slot === 'priority' && account?.tier !== 'Gold') fail(400, 'The priority slot is for Gold members.');
-        const price = R.priceBooking({ pkg, vehicle, addons, account });
-
-        let id;
-        try {
-          id = (await db.query(
-            `insert into bookings (customer_id, booking_date, slot, name, email, phone, vehicle_type, vehicle_desc, package, addons,
-               total, quoted_total, reward_applied, credit_used, location, parish, address, notes, referral_code)
-             values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) returning id`,
-            [c.id, date, slot, name, email, phone, vehicle, vehicleDesc, pkg, addons,
-              price.total, quoted, price.rewardApplied, price.creditUsed, location, parish, address, notes, referral])).rows[0].id;
-        } catch (e) {
-          if (e.code === '23505') fail(409, 'That slot was just taken. Please pick another.');
-          throw e;
-        }
-        if (price.creditUsed > 0) await db.query('update customers set credit = credit - $2 where id = $1', [c.id, price.creditUsed]);
-        return { id, total: price.total };
-      });
-    },
-
-    /* ----- staff ----- */
-    async staff_day(p) {
-      if (!R.isISODate(p.d)) fail(400, 'Pick a valid date.');
-      const r = await pool.query(
-        `select id, status, total, slot, name, package, addons, phone,
-                nullif(concat_ws(' · ', vehicle_type, vehicle_desc), '') as vehicle, location, parish, address, notes
-           from bookings where booking_date = $1
-          order by array_position($2::text[], slot), id`, [p.d, R.SLOTS]);
-      return r.rows;
-    },
-
-    async staff_range(p) {
-      if (!R.isISODate(p.d_from) || !R.isISODate(p.d_to) || p.d_to < p.d_from) fail(400, 'Pick a valid date range.');
-      if (p.d_to > R.addDays(p.d_from, 62)) fail(400, 'Pick a shorter date range.');
-      const r = await pool.query(
-        `select id, booking_date, status, total, slot, name from bookings
-          where booking_date between $1 and $2
-          order by booking_date, array_position($3::text[], slot), id`, [p.d_from, p.d_to, R.SLOTS]);
-      return r.rows;
-    },
-
-    async staff_find_customers(p) {
-      const q = maxLen(text(p.q), 100, 'The search');
-      const today = R.todayISO();
-      const r = await pool.query(
-        `with v as (
-           select customer_id,
-                  count(*) filter (where status = 'completed' and booking_date > $2::date - interval '12 months')::int as visits,
-                  max(booking_date) filter (where status = 'completed') as last_visit
-             from bookings group by customer_id
-         ), n as (
-           select distinct on (customer_id) customer_id, booking_date as next_date, slot as next_slot
-             from bookings where status = 'booked' and booking_date >= $2
-            order by customer_id, booking_date, array_position($3::text[], slot)
-         )
-         select c.name, coalesce(c.phone, '') as phone, c.email, c.stamps, c.credit,
-                coalesce(v.visits, 0) as visits, v.last_visit, n.next_date, n.next_slot
-           from customers c left join v on v.customer_id = c.id left join n on n.customer_id = c.id
-          where $1 = '' or c.name ilike $4 or c.email ilike $4
-             or (length($5) >= 3 and regexp_replace(coalesce(c.phone, ''), '\\D', '', 'g') like '%' || $5 || '%')
-          order by lower(c.name) limit 200`,
-        [q, today, R.SLOTS, `%${likeEscape(q)}%`, q.replace(/\D/g, '')]);
-      return r.rows.map(c => ({ ...c, tier: R.tierFor(c.visits).tier }));
-    },
-
-    // Marking a detail complete is what earns the stamp (and any referral credit).
-    async complete_booking(p) {
-      const id = bookingId(p.p_booking);
-      return tx(pool, async db => {
-        const b = (await db.query(
-          "update bookings set status = 'completed', completed_at = now() where id = $1 and status = 'booked' returning customer_id, reward_applied",
-          [id])).rows[0];
-        if (!b) fail(400, 'That booking is already completed or cancelled.');
-        const c = (await db.query('select * from customers where id = $1 for update', [b.customer_id])).rows[0];
-        // the half-price detail uses up the card; any other detail adds a stamp
-        await db.query('update customers set stamps = $2 where id = $1', [c.id, b.reward_applied ? 0 : Math.min(c.stamps + 1, R.MAX_STAMPS)]);
-        if (c.referred_by && !c.referral_paid_at) {
-          await db.query('update customers set credit = credit + $2, referral_paid_at = now() where id = $1', [c.id, R.REFERRAL_CREDIT]);
-          await db.query('update customers set credit = credit + $2 where id = $1', [c.referred_by, R.REFERRAL_CREDIT]);
-        }
-        return { id };
-      });
-    },
-
-    // Cancelling frees the slot and gives back any credit the booking used.
-    async cancel_booking(p) {
-      const id = bookingId(p.p_booking);
-      return tx(pool, async db => {
-        const b = (await db.query(
-          "update bookings set status = 'cancelled', cancelled_at = now() where id = $1 and status = 'booked' returning customer_id, credit_used",
-          [id])).rows[0];
-        if (!b) fail(400, 'That booking is already completed or cancelled.');
-        if (b.credit_used > 0) await db.query('update customers set credit = credit + $2 where id = $1', [b.customer_id, b.credit_used]);
-        return { id };
-      });
-    }
+  const registry = new Map();
+  const level = lv => (name, fn) => {
+    if (registry.has(name)) throw new Error(`rpc ${name} registered twice`);
+    registry.set(name, { level: lv, fn });
   };
+  const r = { public: level('public'), customer: level('customer'), staff: level('staff'), owner: level('owner') };
+  for (const mod of [publicRpc, accountRpc, officeRpc, ownerRpc]) mod(r, ctx);
 
   async function call(name, req) {
-    const user = await currentUser(req);
-    if (STAFF_ONLY.has(name)) {
-      if (!user) fail(401, 'Please sign in.');
-      if ((await staffName(user)) === null) fail(403, 'Staff only.');
-    }
-    return { data: await rpc[name](req.body || {}, user) };
+    const entry = registry.get(name);
+    if (!entry) fail(404, 'Unknown request.');
+    const actor = await actorFor(req);
+    if (entry.level !== 'public' && !actor) fail(401, 'Please sign in.');
+    if ((entry.level === 'staff' || entry.level === 'owner') && !actor.staff) fail(403, 'Staff only.');
+    if (entry.level === 'owner' && !actor.owner) fail(403, 'Only the owners can do this.');
+    const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
+    return { data: await entry.fn(body, actor, req) };
   }
-  // Bookings get a tighter limit than everything else.
+  // Bookings and messages get a tighter limit than everything else.
   app.post('/rpc/create_booking', { config: { rateLimit: { max: 10, timeWindow: '10 minutes' } } }, req => call('create_booking', req));
-  app.post('/rpc/:name', { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } }, req => {
-    if (!Object.hasOwn(rpc, req.params.name)) fail(404, 'Unknown request.');
-    return call(req.params.name, req);
-  });
+  app.post('/rpc/booking_send', { config: { rateLimit: { max: 20, timeWindow: '10 minutes' } } }, req => call('booking_send', req));
+  app.post('/rpc/:name', { config: { rateLimit: { max: 240, timeWindow: '1 minute' } } }, req => call(req.params.name, req));
 
+  await registerFiles(app, ctx, actorFor);
   return app;
 }

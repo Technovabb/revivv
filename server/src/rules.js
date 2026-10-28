@@ -1,30 +1,24 @@
 /*
- * Revivv's business rules, mirrored from the website (assets/js/app.js and
- * src/pages/quote.html). test/prices.test.js fails if the two drift apart.
+ * Revivv's business rules. Prices, add-ons and slots come from the settings
+ * (src/settings.js), so the owners can change them; the rules for using them live here.
  */
+import { fail } from './util.js';
+
 export const TZ = 'America/Barbados';
-
-export const SLOTS = ['priority', 'morning', 'afternoon', 'late'];
-// Long packages need a 4-hour slot.
-export const LONG_SLOTS = ['morning', 'afternoon'];
-
-// Keyed by the label the booking form sends.
-export const PACKAGES = {
-  'The Express Exterior': { key: 'exterior', price: { car: 90, suv: 110, truck: 130 }, long: false },
-  'All-Around Express': { key: 'allround', price: { car: 120, suv: 150, truck: 180 }, long: false },
-  'The Express Interior': { key: 'interior', price: { car: 160, suv: 190, truck: 220 }, long: true },
-  'Supreme Auto Valet': { key: 'supreme', price: { car: 240, suv: 270, truck: 300 }, long: true }
-};
-export const VEHICLES = { Car: 'car', SUV: 'suv', Truck: 'truck' };
-export const ADDONS = { 'Ceramic spray sealant': 30, 'Leather clean & condition': 40, 'Pet hair removal': 25 };
-export const SEAT_ADDON = 'Seat extraction shampoo';
-export const SEAT_ROW_PRICE = 40;      // per row of seats, 1–4 rows
-export const LOCATIONS = ['Mobile — we come to them', 'Drop off — customer comes to us'];
 
 export const REWARD_OFF = 0.5;         // the 6th detail is half price (package only)
 export const REWARD_AT = 5;            // stamps needed before the reward applies
 export const MAX_STAMPS = 6;
 export const REFERRAL_CREDIT = 25;     // to both people, once the new customer's first detail is done
+export const LOCATIONS = ['Mobile — we come to them', 'Drop off — customer comes to us'];
+export const SEAT_ADDON = 'Seat extraction shampoo';
+
+// A booking's steps. "Open" bookings hold their slot and can still change.
+export const OPEN = ['requested', 'confirmed', 'on_the_way', 'in_progress'];
+export const STATUS_LABEL = {
+  requested: 'Requested', confirmed: 'Confirmed', on_the_way: 'On the way', in_progress: 'Started',
+  completed: 'Done', cancelled: 'Cancelled', no_show: 'No-show'
+};
 
 // Completed details in the last 12 months decide the tier.
 export function tierFor(visits) {
@@ -33,17 +27,23 @@ export function tierFor(visits) {
   return { tier: 'Regular', discount: 0 };
 }
 
+export function findPackage(catalog, name, { activeOnly = true } = {}) {
+  const p = catalog.packages.find(x => x.name === name);
+  return p && (p.active || !activeOnly) ? p : null;
+}
+
 // "Ceramic spray sealant, Seat extraction shampoo ×2" → $110. Unknown items are refused.
-export function addonsTotal(text) {
-  if (!text) return 0;
+export function addonsTotal(catalog, list, { activeOnly = true } = {}) {
+  if (!list) return 0;
   let sum = 0;
-  for (const raw of String(text).split(',')) {
+  for (const raw of String(list).split(',')) {
     const item = raw.trim();
     if (!item) continue;
-    const seat = item.match(/^Seat extraction shampoo\s*[×x]\s*([1-4])$/);
-    if (seat) { sum += SEAT_ROW_PRICE * Number(seat[1]); continue; }
-    if (!(item in ADDONS)) throw Object.assign(new Error(`Unknown add-on: ${item}`), { statusCode: 400 });
-    sum += ADDONS[item];
+    const rows = item.match(/^(.+?)\s*[×x]\s*([1-4])$/);
+    const name = rows ? rows[1] : item;
+    const a = catalog.addons.find(x => x.name === name && (x.active || !activeOnly));
+    if (!a || (rows && !a.perRow) || (!rows && a.perRow)) fail(400, `Unknown add-on: ${item}`);
+    sum += a.price * (rows ? Number(rows[2]) : 1);
   }
   return sum;
 }
@@ -52,9 +52,12 @@ export function addonsTotal(text) {
  * The same sum the quote page does: package + add-ons, then the 6th-stamp
  * reward OR the tier discount (never both, package price only), then credit.
  */
-export function priceBooking({ pkg, vehicle, addons, account }) {
-  const base = PACKAGES[pkg].price[VEHICLES[vehicle]];
-  let total = base + addonsTotal(addons);
+export function priceBooking({ catalog, pkg, vehicle, addons, account, activeOnly = true }) {
+  const p = findPackage(catalog, pkg, { activeOnly });
+  if (!p) fail(400, 'Please pick a package.');
+  const base = p.prices[vehicle];
+  if (base == null) fail(400, 'Please pick your vehicle type.');
+  let total = base + addonsTotal(catalog, addons, { activeOnly });
   let rewardApplied = false, creditUsed = 0;
   if (account) {
     if (account.rewardAvailable) { total -= base * REWARD_OFF; rewardApplied = true; }
@@ -69,18 +72,44 @@ export function todayISO(now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
+// The hour now in Barbados (0-23).
+export function hourNow(now = new Date()) {
+  return Number(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hourCycle: 'h23' }).format(now));
+}
+
 export function isISODate(s) {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
   const d = new Date(s + 'T00:00:00Z');
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
 
-export function isSunday(iso) {
-  return new Date(iso + 'T00:00:00Z').getUTCDay() === 0;
-}
+export const weekday = iso => new Date(iso + 'T00:00:00Z').getUTCDay();
+export const isSunday = iso => weekday(iso) === 0;
 
 export function addDays(iso, n) {
   const d = new Date(iso + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
+}
+
+// "Thu 29 Oct" (or "Thu 29 Oct 2027" outside this year)
+export function prettyDate(iso, today = todayISO()) {
+  const d = new Date(iso + 'T12:00:00Z');
+  const opts = { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' };
+  if (iso.slice(0, 4) !== today.slice(0, 4)) opts.year = 'numeric';
+  return d.toLocaleDateString('en-GB', opts).replace(',', '');
+}
+
+// The slot's start time as a Barbados timestamp, e.g. for "24 hours before".
+export function slotStart(hours, iso, slotId) {
+  const s = hours.slots.find(x => x.id === slotId);
+  const m = s && /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(s.time);
+  let h = 8, min = 0;
+  if (m) { h = Number(m[1]) % 12 + (m[3].toLowerCase() === 'pm' ? 12 : 0); min = Number(m[2] || 0); }
+  return new Date(`${iso}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:00-04:00`);
+}
+
+export function slotText(hours, slotId) {
+  const s = hours.slots.find(x => x.id === slotId);
+  return s ? `${s.label} (${s.time})` : slotId;
 }

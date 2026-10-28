@@ -6,6 +6,7 @@ import EmbeddedPostgres from 'embedded-postgres';
 import { createPool } from '../src/db.js';
 import { migrate } from '../src/migrate.js';
 import { buildApp } from '../src/app.js';
+import { createJobs } from '../src/jobs.js';
 import { todayISO, addDays, isSunday } from '../src/rules.js';
 
 export const ORIGIN = 'https://revivvbb.com';
@@ -13,7 +14,7 @@ export const ORIGIN = 'https://revivvbb.com';
 export async function startTestServer() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'revivv-pg-'));
   const port = 54000 + Math.floor(Math.random() * 1000);
-  const pg = new EmbeddedPostgres({ databaseDir: dir, user: 'postgres', password: 'test', port, persistent: false, onLog: () => {} });
+  const pg = new EmbeddedPostgres({ databaseDir: dir, user: 'postgres', password: 'test', port, persistent: false, onLog: () => {}, initdbFlags: ['--encoding=UTF8', '--locale=C'] });
   await pg.initialise();
   await pg.start();
   await pg.createDatabase('revivv');
@@ -21,18 +22,23 @@ export async function startTestServer() {
   await migrate(pool);
   const mail = [];
   const mailer = { ready: true, async send(m) { mail.push(m); } };
-  const config = { production: false, trustProxy: false, siteOrigins: [ORIGIN, 'http://localhost:4318'], sessionDays: 60, rateLimits: false };
+  const config = {
+    production: false, trustProxy: false, siteOrigins: [ORIGIN, 'http://localhost:4318'], sessionDays: 60, rateLimits: false,
+    uploadDir: fs.mkdtempSync(path.join(os.tmpdir(), 'revivv-up-'))
+  };
   const app = await buildApp({ config, pool, mailer, logger: false });
+  const jobs = createJobs({ pool, services: app.services, config, log: { error() {} } });
   // the same app with the real rate limits, for the one test that checks them
   const limited = await buildApp({ config: { ...config, rateLimits: true }, pool, mailer, logger: false });
   return {
-    app, limited, pool, mail,
+    app, limited, pool, mail, jobs, config,
     async stop() {
       await app.close();
       await limited.close();
       await pool.end();
       await pg.stop();
       fs.rmSync(dir, { recursive: true, force: true });
+      fs.rmSync(config.uploadDir, { recursive: true, force: true });
     }
   };
 }
