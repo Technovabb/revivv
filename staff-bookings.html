@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookings — Revivv Vehicle Detailing</title>
+<meta name="description" content="Revivv back office: every booking, with filters and search.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F6F5F0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Revivv">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="assets/css/site.css?v=435f48b3">
+<link rel="stylesheet" href="assets/css/office.css?v=435f48b3">
+</head>
+<body id="top" class="page-staff page-office">
+
+
+
+
+<style>
+.bk-dates{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.bk-dates .field{margin-bottom:.4rem}
+.bk-day{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin:1.3rem 0 .55rem;
+  font-family:var(--title);text-transform:uppercase;font-size:.9rem;letter-spacing:.03em}
+.bk-day small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:.75rem;color:var(--dim);font-weight:500}
+.bk-count{font-size:.8rem;color:var(--dim);margin:.2rem 0 0}
+.bk-clear{min-height:44px}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>
+
+
+
+
+
+
+<script src="assets/js/api.js?v=435f48b3"></script>
+<script src="assets/js/office.js?v=435f48b3"></script>
+<script src="assets/js/office-bookings.js?v=435f48b3"></script>
+<script>
+(function(){
+  var y = new Date().getFullYear();
+  ['yr','yr2'].forEach(function(id){ var e = document.getElementById(id); if (e) e.textContent = y; });
+  // phone menu: the Menu button opens the full page list
+  var btn = document.querySelector('.menu-button'), hd = btn && btn.closest('header');
+  if (btn && hd) {
+    var setMenu = function(open){
+      hd.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Close' : 'Menu';
+      document.body.classList.toggle('menu-open', open);
+    };
+    btn.addEventListener('click', function(){ setMenu(!hd.classList.contains('open')); });
+    hd.querySelectorAll('nav a').forEach(function(a){ a.addEventListener('click', function(){ setMenu(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && hd.classList.contains('open')) { setMenu(false); btn.focus(); } });
+    window.matchMedia('(min-width:901px)').addEventListener('change', function(e){ if (e.matches) setMenu(false); });
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
+  }
+})();
+</script>
+</body>
+</html>

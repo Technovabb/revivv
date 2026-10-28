@@ -90,7 +90,7 @@ function list(v, n, max, what) {
   return v.map(x => text(x)).filter(Boolean).map(x => { if (x.length > n) fail(400, `${what}: a line is too long.`); return x; });
 }
 
-function checkCatalog(v) {
+function checkCatalog(v, current) {
   const names = DEFAULTS.catalog.packages.map(p => p.name);
   if (!v || !Array.isArray(v.packages) || !Array.isArray(v.addons)) fail(400, 'The price list is incomplete.');
   // The packages are written into the website's pages, so their names stay fixed.
@@ -114,6 +114,10 @@ function checkCatalog(v) {
     if (name === 'Seat extraction shampoo') row.perRow = true;
     return row;
   });
+  // Old bookings name their add-ons, so a saved add-on stays on the list (it can be switched off).
+  for (const old of current.catalog.addons) {
+    if (!addons.some(a => a.name === old.name)) fail(400, `"${old.name}" can't be removed or renamed. Untick "Offered" instead, and add a new one if needed.`);
+  }
   return { packages, addons };
 }
 
@@ -130,15 +134,21 @@ function checkHours(v) {
   });
   const closedWeekdays = [...new Set((v.closedWeekdays || []).map(Number).filter(n => Number.isInteger(n) && n >= 0 && n <= 6))].sort();
   if (closedWeekdays.length === 7) fail(400, 'At least one day a week must be open.');
-  const bookAheadDays = Math.min(Math.max(Number(v.bookAheadDays) || 366, 7), 366);
+  const bookAheadDays = Number(v.bookAheadDays);
+  if (!Number.isInteger(bookAheadDays) || bookAheadDays < 7 || bookAheadDays > 366) fail(400, 'Take bookings from 7 to 366 days ahead.');
+  if (!slots.some(x => x.active)) fail(400, 'At least one time slot must be offered.');
   return { slots, closedWeekdays, bookAheadDays };
 }
 
+const BUSINESS_LABEL = {
+  phone: 'The phone number', phone2: 'The second phone number', whatsapp: 'The WhatsApp number', instagram: 'The Instagram name',
+  reviewUrl: 'The review link', reminderHour: 'The reminder hour', nudgeAfterDays: 'The "next detail" days', cancelHours: 'The cancel hours'
+};
 function checkBusiness(v) {
-  const s = (k, n) => { const x = text(v?.[k]); if (x.length > n) fail(400, `${k} is too long.`); return x; };
+  const s = (k, n) => { const x = text(v?.[k]); if (x.length > n) fail(400, `${BUSINESS_LABEL[k]} is too long.`); return x; };
   const reviewUrl = s('reviewUrl', 300);
   if (reviewUrl && !/^https:\/\//.test(reviewUrl)) fail(400, 'The review link must start with https://');
-  const int = (k, lo, hi) => { const n = Number(v?.[k]); if (!Number.isInteger(n) || n < lo || n > hi) fail(400, `${k} must be a whole number from ${lo} to ${hi}.`); return n; };
+  const int = (k, lo, hi) => { const n = Number(v?.[k]); if (!Number.isInteger(n) || n < lo || n > hi) fail(400, `${BUSINESS_LABEL[k]} must be a whole number from ${lo} to ${hi}.`); return n; };
   return {
     phone: s('phone', 40) || DEFAULTS.business.phone,
     phone2: s('phone2', 40),
@@ -155,7 +165,8 @@ const CHECKS = { catalog: checkCatalog, hours: checkHours, business: checkBusine
 
 export async function saveSetting(db, key, value, actorId) {
   if (!Object.hasOwn(CHECKS, key)) fail(400, 'Unknown setting.');
-  const clean = CHECKS[key](value);
+  clearSettingsCache();
+  const clean = CHECKS[key](value, await getSettings(db));
   await db.query(
     `insert into settings (key, value, updated_at, updated_by) values ($1, $2, now(), $3)
      on conflict (key) do update set value = excluded.value, updated_at = now(), updated_by = excluded.updated_by`,

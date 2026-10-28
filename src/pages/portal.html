@@ -3,8 +3,11 @@
   "description": "Sign in to see your Revivv Rewards stamps and credit, and book your next detail.",
   "bodyClass": "page-portal",
   "noindex": true,
+  "nav": "portal",
+  "styles": ["assets/css/my.css"],
   "scripts": [
     "assets/js/api.js",
+    "assets/js/my.js",
     "assets/js/portal.js"
   ]
 } -->
@@ -49,6 +52,7 @@
 
   <!-- SIGNED IN -->
   <section class="acct hide" id="signedIn">
+    <!--include my-nav-->
     <div class="acct-top">
       <div>
         <h1 class="title" id="acctName">—</h1>
@@ -59,6 +63,10 @@
         <button class="out hide" id="signOutBtn">Sign out</button>
       </div>
     </div>
+
+    <!-- new messages + next booking (filled by portal.js from my_account) -->
+    <a class="my-unread hide" id="unreadLine" href="my-messages.html"></a>
+    <a class="card my-next hide" id="nextCard" href="my-bookings.html"></a>
 
     <!-- stamp card -->
     <div class="card">

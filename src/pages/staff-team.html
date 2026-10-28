@@ -1,0 +1,24 @@
+<!--meta {
+  "title": "Staff",
+  "description": "Revivv back office: who can sign in, and what changed.",
+  "bodyClass": "page-staff page-office",
+  "noindex": true,
+  "chrome": "app",
+  "styles": ["assets/css/office.css"],
+  "scripts": ["assets/js/api.js", "assets/js/office.js", "assets/js/office-team.js"]
+} -->
+<style>
+  .t-row h3,.t-row .meta{overflow-wrap:anywhere}
+  .t-row .left{min-width:0}
+  .t-row .right{display:grid;gap:.3rem;justify-items:end}
+  .t-link{font-family:ui-monospace,Consolas,monospace;font-size:.85rem !important;word-break:break-all;margin-bottom:.6rem}
+  .t-roles{display:grid;gap:.45rem;font-size:.9rem;margin:0;padding:0;list-style:none}
+  .t-roles b{color:var(--text)}
+  .t-log{gap:.75rem}
+  .t-log li{grid-template-columns:1fr;gap:.1rem}
+  .t-log time{font-size:.72rem}
+  @media(min-width:620px){.t-log li{grid-template-columns:10rem 1fr;gap:.8rem}.t-log time{font-size:.82rem}}
+  .t-log .what{color:var(--text);font-weight:600}
+  .t-log .detail{overflow-wrap:anywhere}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>

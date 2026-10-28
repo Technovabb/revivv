@@ -115,7 +115,8 @@ export async function bookingView(db, b, s, { forStaff = false } = {}) {
     'select p.id, p.amount, p.method, p.note, p.created_at, s.name as taken_by from payments p left join staff s on s.user_id = p.taken_by where booking_id = $1 order by p.id',
     [b.id])).rows;
   const paid = round2(payments.reduce((sum, p) => sum + Number(p.amount), 0));
-  const photos = (await db.query('select id, kind, caption, created_at from booking_photos where booking_id = $1 order by id', [b.id])).rows;
+  const photos = (await db.query('select id, kind, caption, created_at, taken_by from booking_photos where booking_id = $1 order by id', [b.id])).rows
+    .map(({ taken_by, ...ph }) => (forStaff ? { ...ph, takenBy: taken_by } : ph));
   const mobile = !!(b.location && b.location.startsWith('Mobile'));
   const steps = [
     { key: 'requested', label: 'Requested', at: b.created_at },
@@ -144,12 +145,24 @@ export async function bookingView(db, b, s, { forStaff = false } = {}) {
 }
 
 /* ---------- conversations ---------- */
-export async function thread(db, customerId, limit = 300) {
+/*
+ * A customer's conversation. With bookingId, only that booking's messages: what
+ * someone holding just that booking's email link may read.
+ */
+export async function thread(db, customerId, { bookingId = null, limit = 300 } = {}) {
   const r = await db.query(
     `select m.id, m.sender, m.sender_name, m.body, m.created_at, b.ref
        from messages m left join bookings b on b.id = m.booking_id
-      where m.customer_id = $1 order by m.id desc limit $2`, [customerId, limit]);
+      where m.customer_id = $1 and ($3::bigint is null or m.booking_id = $3) order by m.id desc limit $2`, [customerId, limit, bookingId]);
   return r.rows.reverse().map(m => ({ id: m.id, sender: m.sender, name: m.sender_name, body: m.body, at: m.created_at, ref: m.ref }));
+}
+
+// The booking a message without one belongs with: the next open booking, else the latest.
+export async function defaultBooking(db, customerId) {
+  const r = await db.query(
+    `select id from bookings where customer_id = $1
+      order by (status = any($2)) desc, case when status = any($2) then booking_date end, id desc limit 1`, [customerId, R.OPEN]);
+  return r.rows[0]?.id || null;
 }
 
 export async function markRead(db, customerId, side) {
@@ -159,22 +172,22 @@ export async function markRead(db, customerId, side) {
      on conflict (customer_id, side) do update set last_read_id = excluded.last_read_id`, [customerId, side]);
 }
 
-// Messages the other side wrote that this side hasn't opened yet.
-export async function unread(db, customerId, side) {
+// Messages the other side wrote that this side hasn't opened yet (optionally for one booking).
+export async function unread(db, customerId, side, bookingId = null) {
   const other = side === 'staff' ? ['customer'] : ['staff', 'system'];
   const r = await db.query(
     `select count(*)::int as n from messages m
-      where m.customer_id = $1 and m.sender = any($3)
+      where m.customer_id = $1 and m.sender = any($3) and ($4::bigint is null or m.booking_id = $4)
         and m.id > coalesce((select last_read_id from message_reads where customer_id = $1 and side = $2), 0)`,
-    [customerId, side, other]);
+    [customerId, side, other, bookingId]);
   return r.rows[0].n;
 }
 
-// Where a customer's email should send them to read their messages.
-async function customerLink(db, c, site) {
+// Where a customer's email should send them to read a message: My Revivv, or the booking's own page.
+async function customerLink(db, c, site, bookingId) {
   const hasAccount = c.email && (await db.query('select 1 from users where lower(email) = lower($1)', [c.email])).rowCount;
   if (hasAccount) return `${site}/my-messages.html`;
-  const b = (await db.query('select ref, access_key from bookings where customer_id = $1 order by id desc limit 1', [c.id])).rows[0];
+  const b = bookingId ? (await db.query('select ref, access_key from bookings where id = $1', [bookingId])).rows[0] : null;
   return b ? `${site}/my-booking.html?ref=${b.ref}&k=${b.access_key}` : `${site}/my-messages.html`;
 }
 
@@ -187,13 +200,14 @@ export async function postMessage(db, ctx, { customer, from, actor, body, bookin
   if (!clean) fail(400, 'Write a message first.');
   if (clean.length > 2000) fail(400, 'That message is too long. Keep it under 2,000 characters.');
   const name = from === 'staff' ? (actor.name || 'Revivv').split(' ')[0] : customer.name;
+  if (!bookingId) bookingId = await defaultBooking(db, customer.id);
   const m = (await db.query(
     'insert into messages (customer_id, booking_id, sender, sender_id, sender_name, body) values ($1, $2, $3, $4, $5, $6) returning id, created_at',
     [customer.id, bookingId, from, actor?.id || null, name, clean])).rows[0];
   await markRead(db, customer.id, from === 'staff' ? 'staff' : 'customer');
   const s = await getSettings(db);
   if (from === 'staff' && customer.email && !(await ctx.outbox.recent(db, customer.id, 'message_to_customer', 10))) {
-    const e = emails.message_to_customer(customer, s, ctx.site, { sender_name: name, body: clean, link: await customerLink(db, customer, ctx.site) });
+    const e = emails.message_to_customer(customer, s, ctx.site, { sender_name: name, body: clean, link: await customerLink(db, customer, ctx.site, bookingId) });
     await ctx.outbox.queue(db, { to: customer.email, kind: 'message_to_customer', subject: e.subject, body: e.body, customerId: customer.id });
   }
   if (from === 'customer' && !(await ctx.outbox.recent(db, customer.id, 'message_to_staff', 10))) {

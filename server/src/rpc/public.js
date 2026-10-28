@@ -37,7 +37,10 @@ export default function publicRpc(r, ctx) {
       closedWeekdays: s.hours.closedWeekdays,
       bookAheadDays: s.hours.bookAheadDays,
       closedDays: closed.rows.map(x => ({ day: x.day, reason: x.reason })),
-      business: { phone: s.business.phone, phone2: s.business.phone2, whatsapp: s.business.whatsapp, instagram: s.business.instagram, cancelHours: s.business.cancelHours },
+      business: {
+        phone: s.business.phone, phone2: s.business.phone2, whatsapp: s.business.whatsapp, instagram: s.business.instagram,
+        cancelHours: s.business.cancelHours, nudgeAfterDays: s.business.nudgeAfterDays
+      },
       emailCodes: !ctx.outbox.hold
     };
   });
@@ -115,8 +118,9 @@ export default function publicRpc(r, ctx) {
     return {
       booking: await bookingView(pool, b, s),
       customer: { name: c.name, stamps: Math.min(c.stamps, R.MAX_STAMPS), credit: Number(c.credit) },
-      messages: await thread(pool, c.id),
-      unread: await unread(pool, c.id, 'customer'),
+      // only this booking's messages: the link may have been forwarded
+      messages: await thread(pool, c.id, { bookingId: b.id }),
+      unread: await unread(pool, c.id, 'customer', b.id),
       business: { phone: s.business.phone, whatsapp: s.business.whatsapp }
     };
   });
@@ -144,6 +148,6 @@ export default function publicRpc(r, ctx) {
     const b = await byKey(db, p);
     const c = (await db.query('select * from customers where id = $1', [b.customer_id])).rows[0];
     await postMessage(db, ctx, { customer: c, from: 'customer', actor: { id: null, name: c.name }, body: p.body, bookingId: b.id });
-    return { messages: await thread(db, c.id) };
+    return { messages: await thread(db, c.id, { bookingId: b.id }) };
   }));
 }

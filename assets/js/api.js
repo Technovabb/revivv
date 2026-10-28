@@ -53,10 +53,26 @@
       signOut: () => call("/auth/signout", {}, true),
       async updateUser({ password }){ await ready; return call("/auth/password", { password }, true); },
       resetPasswordForEmail: (email, opts) =>
-        call("/auth/reset", { email, redirectTo: (opts && opts.redirectTo) || location.href }, true)
+        call("/auth/reset", { email, redirectTo: (opts && opts.redirectTo) || location.href }, true),
+      /* sign in with a 6-digit code sent by email (when the mailbox is on: site_info.emailCodes) */
+      sendCode: email => call("/auth/code", { email }, true),
+      verifyCode: (email, code) => call("/auth/verify", { email, code }, true)
     },
     rpc: (name, params) => call("/rpc/" + name, params || {}),
-    /* the signed-in person's staff record ({ name }), or null if they aren't staff */
-    staffMe: () => call("/staff/me", undefined, true)
+    /* the signed-in person's staff record ({ name, role, email }), or null if they aren't staff */
+    async staffMe(){ await ready; return call("/staff/me", undefined, true); },
+    base: BASE,
+    post: (path, body) => call(path, body),
+    /* a job photo's address; k is the booking's key when there's no sign-in */
+    photoUrl: (id, k) => `${BASE}/photos/${id}${k ? "?k=" + encodeURIComponent(k) : ""}`,
+    /* save a CSV from the server (owners) */
+    async download(path, filename){
+      const res = await fetch(BASE + path, { credentials: "include" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error?.message || "Couldn't download that.");
+      const url = URL.createObjectURL(await res.blob());
+      const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
   };
 })();

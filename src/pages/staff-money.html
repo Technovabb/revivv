@@ -1,0 +1,25 @@
+<!--meta {
+  "title": "Staff",
+  "description": "Revivv back office: payments, downloads and gift vouchers.",
+  "bodyClass": "page-staff page-office",
+  "noindex": true,
+  "chrome": "app",
+  "styles": ["assets/css/office.css"],
+  "scripts": ["assets/js/api.js", "assets/js/office.js", "assets/js/office-money.js"]
+} -->
+<style>
+.page-office .chips button{min-height:44px}
+.range-custom{margin-top:.2rem}
+.tbl-wrap{overflow-x:auto}
+.tbl .btn{min-width:88px}
+.neg{color:var(--red)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:.04em;color:var(--text)}
+.vcode{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(1.5rem,8vw,2.2rem);font-weight:700;letter-spacing:.08em;
+  text-align:center;background:var(--bg-2);border:1px dashed var(--line-2);border-radius:12px;padding:1rem .5rem;margin:.8rem 0;
+  user-select:all;word-break:break-all}
+.acts-top{margin:0 0 .8rem}
+.acts-top .btn{flex:0 1 auto}
+.offscreen{position:fixed;left:-9999px;top:0}
+@media(max-width:640px){.tbl td:empty{display:none}}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>

@@ -22,7 +22,9 @@ const email = (emailArg || '').trim().toLowerCase();
 async function linkFor(userId) {
   const { token, hash } = newToken();
   await pool.query("insert into password_tokens (token_hash, user_id, expires_at) values ($1, $2, now() + interval '7 days')", [hash, userId]);
-  const url = new URL('/quote.html#rewards', config.siteOrigins[0]);
+  // staff choose their password in the back office; customers on the rewards page
+  const staff = (await pool.query('select 1 from staff where user_id = $1', [userId])).rowCount > 0;
+  const url = new URL(staff ? '/staff.html' : '/quote.html#rewards', config.siteOrigins[0]);
   url.searchParams.set('type', 'recovery');
   url.searchParams.set('token', token);
   return url.toString();

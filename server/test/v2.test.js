@@ -90,6 +90,11 @@ test('messages: one conversation per customer, unread counts and email alerts', 
 
   const view = ok(await guest.rpc('booking_view', { ref: made.ref, k: made.key }));
   assert.equal(view.unread, 1, 'the staff reply (writing marked the earlier lines read)');
+  assert.ok(view.messages.every(m => m.ref === made.ref), 'a booking link shows only that booking\'s messages');
+  // another booking's link doesn't show this one's conversation
+  const other = ok(await client(t.app).rpc('create_booking', booking({ p_date: workday(16), p_email: 'chat@example.com', p_name: 'Chat Cara' })));
+  const otherView = ok(await client(t.app).rpc('booking_view', { ref: other.ref, k: other.key }));
+  assert.ok(!otherView.messages.some(m => /mats/.test(m.body)));
   ok(await guest.rpc('booking_read', { ref: made.ref, k: made.key }));
   assert.equal(ok(await guest.rpc('booking_view', { ref: made.ref, k: made.key })).unread, 0);
 
@@ -169,6 +174,13 @@ test('prices, hours and closed days come from the settings', async () => {
   assert.equal(r.total, 130);
   catalog.packages[0].name = 'Something else';
   assert.equal((await owner.rpc('settings_save', { key: 'catalog', value: catalog })).status, 400);
+  // a saved add-on can be switched off but not removed (old bookings name it)
+  catalog.packages[0].name = 'The Express Exterior';
+  const without = { ...catalog, addons: catalog.addons.filter(a => a.name !== 'Engine bay clean') };
+  assert.match((await owner.rpc('settings_save', { key: 'catalog', value: without })).body.error.message, /can't be removed/);
+  catalog.addons.find(a => a.name === 'Engine bay clean').active = false;
+  ok(await owner.rpc('settings_save', { key: 'catalog', value: catalog }));
+  assert.ok(!ok(await client(t.app).rpc('site_info')).addons.some(a => a.name === 'Engine bay clean'));
 
   const day = workday(11);
   ok(await owner.rpc('closed_day_add', { day, reason: 'Kadooment' }));

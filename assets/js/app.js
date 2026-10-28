@@ -426,6 +426,9 @@ const SLOTS = [
   { id:"afternoon", label:"Afternoon",      time:"12:00pm – 4:00pm", goldOnly:false, long:true  },
   { id:"late",      label:"Late afternoon", time:"4:00pm – 6:00pm",  goldOnly:false, long:false }
 ];
+/* Closed days and how far ahead people can book: the owners set these in the
+   back office, and applySiteInfo() below loads them. Sunday is by appointment. */
+let CLOSED_DAYS = new Set(), CLOSED_WD = [0], BOOK_AHEAD = 366, selectedSlotId = null;
 const RevivvSchedule = {
   async getTakenSlots(iso){
     if (!LIVE || offline) return [];
@@ -464,7 +467,9 @@ function renderCalendar(){
   for (let d = 1; d <= days; d++){
     const date = new Date(viewY, viewM, d);
     const key  = isoOf(date);
-    const off  = date < today || date.getDay() === 0;   // past, or Sunday (by appointment)
+    const last = new Date(today); last.setDate(last.getDate() + BOOK_AHEAD);
+    // past, too far ahead, a weekly closed day (Sunday is by appointment) or a closed date
+    const off  = date < today || date > last || CLOSED_WD.includes(date.getDay()) || CLOSED_DAYS.has(key);
     const cls  = ["day"];
     if (key === isoOf(today))  cls.push("today");
     if (key === selectedISO)   cls.push("sel");
@@ -485,7 +490,7 @@ async function renderSlots(key){
     let why = offline ? `${s.time} · we'll confirm` : s.time, off = taken.includes(s.id);
     if (off) why = "Booked";
     else if (P.long && !s.long){ off = true; why = "Not enough time for this package"; }
-    return `<button type="button" class="slot${s.goldOnly ? " gold" : ""}" data-slot="${s.label} (${s.time})" ${off ? "disabled" : ""}>
+    return `<button type="button" class="slot${s.goldOnly ? " gold" : ""}" data-id="${s.id}" data-slot="${s.label} (${s.time})" ${off ? "disabled" : ""}>
               <span>${s.label}${s.goldOnly ? " · Gold" : ""}</span><em>${why}</em></button>`;
   }).join("");
 
@@ -499,7 +504,7 @@ calGrid.addEventListener("click", e => {
   if (!btn || btn.disabled) return;
   selectedISO = btn.dataset.iso;
   fDate.value = selectedISO;
-  fTime.value = "";
+  fTime.value = ""; selectedSlotId = null;
   renderCalendar();
   renderSlots(selectedISO);
 });
@@ -509,6 +514,7 @@ slotList.addEventListener("click", e => {
   slotList.querySelectorAll(".slot").forEach(s => s.classList.remove("sel"));
   btn.classList.add("sel");
   fTime.value = btn.dataset.slot;
+  selectedSlotId = btn.dataset.id;
 });
 document.getElementById("calPrev").addEventListener("click", () => {
   viewM--; if (viewM < 0){ viewM = 11; viewY--; } renderCalendar();
@@ -587,7 +593,7 @@ form.addEventListener("submit", async e => {
 
   try{
     const f    = Object.fromEntries(new FormData(form));
-    const slot = slotIdFrom(f.preferred_time || "");
+    const slot = selectedSlotId || slotIdFrom(f.preferred_time || "");
     if (!slot) throw new Error("Pick a slot first.");
 
     const res = await sb.rpc("create_booking", {
@@ -621,10 +627,16 @@ form.addEventListener("submit", async e => {
       throw new Error(error.message);
     }
 
+    /* the booking's reference, and its own page (status, messages, receipt) */
+    const made = res.data || {};
+    const page = made.ref && made.key ? `my-booking.html?ref=${encodeURIComponent(made.ref)}&k=${encodeURIComponent(made.key)}` : null;
+    const ref = Object.assign(document.createElement("b"), { textContent: made.ref || "" });
     msg.className = "ok";
-    msg.textContent = "Booking request sent. We'll confirm your slot shortly.";
+    msg.replaceChildren("Booking request sent. ", made.ref ? "Your reference is " : "", made.ref ? ref : "", made.ref ? ". " : "",
+      "We'll confirm your slot shortly and email you. ",
+      page ? Object.assign(document.createElement("a"), { href: page, textContent: "See your booking" }) : "", page ? "." : "");
     form.reset();
-    selectedISO = null; fDate.value = ""; fTime.value = "";
+    selectedISO = null; selectedSlotId = null; fDate.value = ""; fTime.value = "";
     renderCalendar();
     slotList.innerHTML = `<p class="head">Available slots</p><p class="slot-empty">Pick a date to see what's open.</p>`;
     syncWhere(); update();
@@ -748,15 +760,66 @@ document.getElementById("yr2").textContent = new Date().getFullYear();
 renderCalendar();
 update();
 
-/* Check the database once on load. If it can't be reached (or takes over
-   8 seconds), switch the page to WhatsApp booking. */
+/* The owners' current prices, add-ons, slots and closed days (set in the
+   back office). The prices written into this page are the fallback. */
+function applySiteInfo(info){
+  for (const p of info.packages || []){
+    const k = Object.keys(PACKAGES).find(k => PACKAGES[k].label === p.name);
+    if (k) PACKAGES[k].price = { car:p.prices.Car, suv:p.prices.SUV, truck:p.prices.Truck };
+  }
+  const offered = new Set((info.packages || []).map(p => p.name));
+  document.querySelectorAll('input[name="pkg"]').forEach(inp => {
+    const on = offered.has(PACKAGES[inp.value].label);
+    inp.closest("label").classList.toggle("hide", !on);
+    inp.disabled = !on;
+    if (!on && inp.checked) document.querySelector('input[name="pkg"]:not(:disabled)')?.click();
+  });
+
+  const box = document.getElementById("addonOpts");
+  const seatLabel = seatAddon.closest("label");
+  const known = new Map((info.addons || []).map(a => [a.name, a]));
+  box.querySelectorAll('input[name="addon"]').forEach(inp => {
+    const a = known.get(inp.value);
+    inp.closest("label").classList.toggle("hide", !a);
+    if (!a){ inp.checked = false; return; }
+    inp.dataset.price = a.price;
+    const em = inp.closest("label").querySelector("em");
+    if (em) em.firstChild.textContent = em.firstChild.textContent.replace(/^\+\$[\d.]+/, "+$" + a.price);
+    known.delete(a.name);
+  });
+  for (const a of known.values()){   // add-ons the owners added
+    if (a.perRow) continue;
+    const inp = Object.assign(document.createElement("input"), { type:"checkbox", name:"addon", value:a.name });
+    inp.dataset.price = a.price;
+    inp.addEventListener("change", update);
+    const span = document.createElement("span");
+    span.append(a.name, Object.assign(document.createElement("em"), { textContent:"+$" + a.price }));
+    const label = Object.assign(document.createElement("label"), { className:"opt" });
+    label.append(inp, span);
+    box.insertBefore(label, seatLabel);
+  }
+
+  if ((info.slots || []).length) SLOTS.splice(0, SLOTS.length, ...info.slots);
+  CLOSED_DAYS = new Set((info.closedDays || []).map(d => d.day));
+  CLOSED_WD = info.closedWeekdays || [0];
+  BOOK_AHEAD = info.bookAheadDays || 366;
+  renderCalendar();
+  update();
+}
+
+/* Check the server once on load (and get the owners' current prices and
+   hours). If it can't be reached, or takes over 8 seconds, switch the page
+   to WhatsApp booking. */
 (async () => {
   if (!offline){
     const res = await Promise.race([
-      sb.rpc("slots_taken", { d: isoOf(today) }),
+      sb.rpc("site_info"),
       new Promise(r => setTimeout(() => r({ error:{ message:"timed out" }, status:0 }), 8000))
     ]);
-    if (!isDown(res)) return;
+    if (!isDown(res)){
+      if (res.data) applySiteInfo(res.data);
+      return;
+    }
   }
   goOffline();
   if (selectedISO) renderSlots(selectedISO);

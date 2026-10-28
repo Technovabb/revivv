@@ -60,7 +60,11 @@ export default function ownerRpc(r, ctx) {
          from payments p join bookings b on b.id = p.booking_id
          left join staff st on st.user_id = p.taken_by left join vouchers v on v.id = p.voucher_id
         where ${day('p.created_at')} between $1 and $2 order by p.id desc limit 1000`, [from, to])).rows;
-    return { from, to, payments: rows.map(x => ({ ...x, amount: Number(x.amount), methodLabel: METHOD_LABEL[x.method] })) };
+    // totals over the whole range, even when the list is cut at 1,000 rows
+    const totals = (await pool.query(
+      `select method, sum(amount) as total, count(*)::int as n from payments where ${day('created_at')} between $1 and $2 group by method order by total desc`,
+      [from, to])).rows.map(x => ({ method: x.method, label: METHOD_LABEL[x.method], total: Number(x.total), n: x.n }));
+    return { from, to, totals, more: rows.length === 1000, payments: rows.map(x => ({ ...x, amount: Number(x.amount), methodLabel: METHOD_LABEL[x.method] })) };
   });
 
   r.owner('vouchers_list', async () => {
@@ -192,9 +196,17 @@ export default function ownerRpc(r, ctx) {
     if (!email) fail(400, 'Enter their email address.');
     const name = maxLen(text(p.name), 60, 'The name');
     if (!name) fail(400, 'Enter their name.');
-    const role = p.role === 'crew' ? 'crew' : 'owner';
-    const u = (await db.query(
-      'insert into users (email) values ($1) on conflict ((lower(email))) do update set email = users.email returning id', [email])).rows[0];
+    const role = p.role === 'owner' ? 'owner' : 'crew';
+    let u;
+    if (p.id) {   // editing someone: their email may change
+      const id = posId(p.id, 'staff member');
+      if (!(await db.query('select 1 from staff where user_id = $1', [id])).rowCount) fail(404, 'That person is not on the staff list.');
+      if ((await db.query('select 1 from users where lower(email) = $1 and id <> $2', [email, id])).rowCount) fail(409, 'Someone else already signs in with that email.');
+      u = (await db.query('update users set email = $2 where id = $1 returning id', [id, email])).rows[0];
+    } else {
+      u = (await db.query(
+        'insert into users (email) values ($1) on conflict ((lower(email))) do update set email = users.email returning id', [email])).rows[0];
+    }
     const before = (await db.query('select role from staff where user_id = $1', [u.id])).rows[0];
     if (before?.role === 'owner' && role === 'crew') {
       const owners = (await db.query("select count(*)::int as n from staff where role = 'owner'")).rows[0].n;
@@ -230,7 +242,7 @@ export default function ownerRpc(r, ctx) {
     const { token, hash } = newToken();
     await pool.query("insert into password_tokens (token_hash, user_id, expires_at) values ($1, $2, now() + interval '7 days')", [hash, id]);
     await audit(pool, user, 'staff.link', st.name);
-    const url = new URL('/quote.html#rewards', ctx.site);
+    const url = new URL('/staff.html', ctx.site);   // the back office asks them to choose a password
     url.searchParams.set('type', 'recovery');
     url.searchParams.set('token', token);
     return { link: url.toString() };

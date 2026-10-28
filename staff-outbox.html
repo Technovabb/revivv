@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff — Revivv Vehicle Detailing</title>
+<meta name="description" content="Revivv back office: emails sent and waiting.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F6F5F0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Revivv">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="assets/css/site.css?v=435f48b3">
+<link rel="stylesheet" href="assets/css/office.css?v=435f48b3">
+</head>
+<body id="top" class="page-staff page-office">
+
+
+
+
+<style>
+.page-office .chips button{min-height:44px}
+.count{margin:-.3rem 0 .6rem}
+details.mail summary{list-style:none;cursor:pointer}
+details.mail summary::-webkit-details-marker{display:none}
+details.mail .mail-head{min-width:0}
+details.mail h3{overflow-wrap:anywhere}
+details.mail .meta{overflow-wrap:anywhere}
+details.mail .more{display:block;margin-top:.45rem;font-size:.75rem;font-weight:600;color:var(--blue-lt)}
+details.mail .more::after{content:"Read it \25BE"}
+details.mail[open] .more::after{content:"Close \25B4"}
+details.mail[open]{border-color:var(--line-2)}
+.mail-body{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg-2);border:1px solid var(--line);border-radius:9px;
+  padding:.8rem .9rem;margin:.8rem 0 .5rem;font-size:.88rem;line-height:1.55;color:var(--text)}
+.offscreen{position:fixed;left:-9999px;top:0}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>
+
+
+
+
+
+
+<script src="assets/js/api.js?v=435f48b3"></script>
+<script src="assets/js/office.js?v=435f48b3"></script>
+<script src="assets/js/office-outbox.js?v=435f48b3"></script>
+<script>
+(function(){
+  var y = new Date().getFullYear();
+  ['yr','yr2'].forEach(function(id){ var e = document.getElementById(id); if (e) e.textContent = y; });
+  // phone menu: the Menu button opens the full page list
+  var btn = document.querySelector('.menu-button'), hd = btn && btn.closest('header');
+  if (btn && hd) {
+    var setMenu = function(open){
+      hd.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Close' : 'Menu';
+      document.body.classList.toggle('menu-open', open);
+    };
+    btn.addEventListener('click', function(){ setMenu(!hd.classList.contains('open')); });
+    hd.querySelectorAll('nav a').forEach(function(a){ a.addEventListener('click', function(){ setMenu(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && hd.classList.contains('open')) { setMenu(false); btn.focus(); } });
+    window.matchMedia('(min-width:901px)').addEventListener('change', function(e){ if (e.matches) setMenu(false); });
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
+  }
+})();
+</script>
+</body>
+</html>

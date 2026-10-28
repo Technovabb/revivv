@@ -1,0 +1,214 @@
+/* ───────────────────────────────────────────────
+   My Revivv — the customer pages (portal.html, my-*.html).
+   Light site theme from site.css. Phone first (375px), tap targets 44px+.
+   Note: site.css styles bare <header>, <footer>, <form>, <label> and
+   .card li, so these pages use their own classes instead.
+   ─────────────────────────────────────────────── */
+:root{--green-deep:#12692F;--red-wash:#FDECEC;--green-wash:#E7F6EC;--gold-wash:#FFF6E0}
+[hidden]{display:none !important}
+.sr-only{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.page-my .app-main{padding:1.6rem 0 4rem}
+.page-my form{display:block;max-width:none}
+.page-my .card{padding:1.3rem 1.2rem}
+@media(min-width:560px){.page-my .card{padding:1.6rem 1.6rem}}
+.page-my .card li::before{content:none}
+.page-my .card ul,.page-my .card ol{list-style:none;color:inherit;font-size:inherit}
+
+/* ─── sub-menu ─── */
+/* every item stays in view: on a phone the five wrap onto two rows */
+.my-nav{display:flex;flex-wrap:wrap;gap:4px;
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:4px;margin-bottom:1.4rem;
+  box-shadow:var(--shadow-sm)}
+.my-nav a{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-height:44px;
+  padding:0 .75rem;border-radius:12px;font-family:var(--body);font-size:.86rem;font-weight:600;color:var(--text);
+  text-decoration:none;white-space:nowrap;transition:background .15s,color .15s}
+.my-nav a:hover{background:var(--sky);color:var(--ink)}
+.my-nav a[aria-current="page"]{background:var(--blue-solid);color:#fff}
+.page-my .my-nav:not(.is-on){display:none}
+.my-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.35rem;height:1.35rem;padding:0 .35rem;
+  border-radius:99px;background:var(--red);color:#fff;font-size:.72rem;font-weight:700;line-height:1;
+  box-shadow:0 0 0 2px var(--panel)}
+.my-badge[hidden]{display:none}
+
+/* ─── page heading ─── */
+.my-head{margin:.4rem 0 1.3rem}
+.my-head .eyebrow{margin-bottom:.4rem}
+.my-head .title{font-size:clamp(2rem,8vw,2.6rem);line-height:.98}
+.my-head p{color:var(--muted);margin-top:.5rem;font-size:.98rem}
+.card-h{font-family:var(--title);text-transform:uppercase;font-weight:900;letter-spacing:-.02em;word-spacing:.12em;
+  font-size:1.2rem;line-height:1.1;margin-bottom:.8rem;color:var(--text)}
+.card-h small{display:block;font-family:var(--body);text-transform:none;letter-spacing:0;word-spacing:0;font-weight:500;
+  font-size:.85rem;color:var(--muted);margin-top:.3rem}
+.my-empty{color:var(--muted);font-size:.95rem;line-height:1.6}
+.my-loading{color:var(--muted);font-size:.95rem;padding:1.4rem 0}
+
+/* ─── buttons ─── */
+.my-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.my-actions .btn{flex:1 1 auto}
+.my-wide{width:100%}
+.btn-sm2{min-height:44px;padding:0 1.1rem;font-size:.78rem}
+.btn-danger{border-color:var(--red);color:var(--red);background:transparent}
+.btn-danger:hover{background:var(--red);color:#fff;transform:translateY(-2px)}
+.btn-danger.solid{background:var(--red);color:#fff}
+.text-btn{display:inline-flex;align-items:center;min-height:44px;padding:0 .2rem;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-size:.9rem;font-weight:600;color:var(--blue-deep);text-decoration:underline;text-underline-offset:3px}
+.text-btn:hover{color:var(--ink)}
+.my-contact{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.my-contact .btn{flex:1 1 auto;min-height:48px}
+.page-my .app-main a:not([class]),.my-unread a:not([class]){color:var(--blue-deep);text-underline-offset:3px}
+
+/* status pill */
+.pill{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--body);font-size:.74rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;border-radius:99px;padding:.32rem .75rem;white-space:nowrap;background:var(--sky);color:var(--blue-deep)}
+.pill.s-requested{background:var(--gold-wash,#FFF6E0);color:var(--gold)}
+.pill.s-completed{background:var(--green-wash,#E7F6EC);color:var(--green-deep,#12692F)}
+.pill.s-cancelled,.pill.s-no_show{background:var(--red-wash,#FDECEC);color:var(--red)}
+
+/* signed-out / offline panels */
+.my-gate{text-align:left}
+.my-gate .title{font-size:1.9rem;line-height:1;margin-bottom:.6rem}
+.my-gate p{color:var(--muted);margin-bottom:1rem}
+.my-gate .hint{margin-top:1rem;margin-bottom:0}
+
+/* ─── booking: status + steps ─── */
+.my-status{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-top:.6rem}
+.my-alert{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;border-radius:16px;
+  padding:.8rem 1rem;margin-bottom:1rem;background:var(--sky);border:1px solid rgba(0,102,214,.25);color:var(--ink);font-size:.95rem}
+.my-alert a{font-weight:700}
+.my-alert.ok{background:var(--green-wash,#E7F6EC);border-color:rgba(18,105,47,.3)}
+.my-steps{display:grid;gap:0;margin:.2rem 0 0}
+.my-steps li{position:relative;display:grid;grid-template-columns:28px 1fr;column-gap:.8rem;padding-bottom:1.1rem}
+.my-steps li:last-child{padding-bottom:0}
+.my-steps li:not(:last-child)::after{content:"";position:absolute;left:13px;top:28px;bottom:2px;width:2px;background:var(--line-2)}
+.my-steps li.done:not(:last-child)::after{background:var(--blue)}
+.my-steps .dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--line-2);background:var(--panel);font-size:.8rem;font-weight:700;color:var(--dim)}
+.my-steps .done .dot{background:var(--blue-solid);border-color:var(--blue-solid);color:#fff}
+.my-steps .now .dot{box-shadow:0 0 0 4px rgba(22,135,255,.25)}
+.my-steps .stop .dot{background:var(--red);border-color:var(--red);color:#fff}
+.my-steps .skip .dot{border-style:dashed}
+.my-steps b{display:block;font-weight:600;font-size:.98rem;line-height:28px;color:var(--text)}
+.my-steps .todo b,.my-steps .skip b{color:var(--muted);font-weight:500}
+.my-steps .now b{font-weight:700}
+.my-steps time,.my-steps small{display:block;font-size:.82rem;color:var(--muted);line-height:1.4;grid-column:2}
+
+/* ─── label / value rows ─── */
+.my-rows{display:grid}
+.my-row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--line);
+  font-size:.95rem}
+.my-row:last-child{border-bottom:0}
+.my-row>span:first-child{color:var(--muted);flex:none;max-width:45%}
+.my-row>span:last-child{color:var(--text);font-weight:600;text-align:right;overflow-wrap:anywhere}
+.my-row.big>span:last-child{font-family:var(--title);font-weight:900;font-size:1.4rem;letter-spacing:-.02em}
+.my-row.good>span:last-child{color:var(--green-deep,#12692F)}
+.my-row.owe>span:last-child{color:var(--text)}
+.my-row .sub{display:block;font-weight:400;color:var(--muted);font-size:.85rem}
+
+/* ─── receipt ─── */
+.receipt{border:1px dashed var(--line-2)}
+.receipt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.8rem}
+.receipt-top img{height:28px;width:auto;filter:brightness(0)}
+.receipt-top p{text-align:right;font-size:.82rem;color:var(--muted);line-height:1.5}
+.receipt h2{margin-top:.2rem}
+.receipt .my-row{font-size:.9rem;padding:.5rem 0}
+.receipt-foot{font-size:.8rem;color:var(--muted);margin-top:.8rem;line-height:1.6}
+
+/* ─── photos ─── */
+.photo-group+.photo-group{margin-top:1.1rem}
+.photo-group h3{font-family:var(--body);font-size:.76rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:560px){.photo-grid{grid-template-columns:repeat(3,1fr)}}
+.photo-grid figure{margin:0}
+.photo-grid a{display:block;border-radius:12px;overflow:hidden;background:var(--raised)}
+.photo-grid img{width:100%;height:auto;aspect-ratio:1;object-fit:cover}
+.photo-grid figcaption{font-size:.8rem;color:var(--muted);margin-top:.3rem;line-height:1.4}
+
+/* ─── conversation ─── */
+.chat-box{display:flex;flex-direction:column;gap:.5rem;max-height:min(62vh,560px);min-height:9rem;overflow-y:auto;
+  background:var(--raised);border-radius:16px;padding:.9rem .7rem;margin-bottom:.8rem;overscroll-behavior:contain}
+.chat-day{align-self:center;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:.4rem 0 .1rem}
+.chat-sys{align-self:center;max-width:92%;text-align:center;font-size:.8rem;color:var(--muted);line-height:1.45}
+.chat-sys time{display:block;font-size:.72rem}
+.chat-row{display:flex}
+.chat-row.me{justify-content:flex-end}
+.bubble{max-width:84%;padding:.6rem .85rem .5rem;border-radius:18px;font-size:.95rem;line-height:1.45;box-shadow:0 1px 2px rgba(7,17,29,.06)}
+.chat-row.them .bubble{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:5px;color:var(--text)}
+.chat-row.me .bubble{background:var(--blue-solid);color:#fff;border-bottom-right-radius:5px}
+.bubble .who{display:block;font-size:.78rem;font-weight:700;color:var(--blue-deep);margin-bottom:.1rem}
+.bubble .body{white-space:pre-wrap;overflow-wrap:anywhere}
+.bubble .meta{display:flex;justify-content:flex-end;gap:.6rem;font-size:.72rem;margin-top:.2rem;color:var(--dim)}
+.chat-row.me .bubble .meta{color:#fff}
+.chat-row.me .bubble .meta a{color:#fff !important}
+.chat-form .chat-in{display:flex;gap:.5rem;align-items:flex-end}
+.chat-form textarea{flex:1;min-height:52px;max-height:40vh;resize:vertical;padding:.8rem .9rem;font-size:1rem}
+.chat-form .btn{flex:none;min-height:52px;padding:0 1.2rem}
+.chat-form .hint{margin-top:.4rem}
+.chat-note{font-size:.88rem;color:var(--muted);margin:-.2rem 0 .8rem}
+
+/* ─── bookings list ─── */
+.bk-list{display:grid;gap:.6rem}
+.bk{display:grid;grid-template-columns:1fr auto;gap:.2rem .8rem;align-items:center;text-decoration:none;color:var(--text);
+  background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:.95rem 1rem;min-height:44px;
+  transition:border-color .15s,box-shadow .15s}
+.bk:hover{border-color:var(--blue);box-shadow:var(--shadow-sm)}
+.bk-when{font-family:var(--title);font-weight:800;font-size:1.05rem;line-height:1.2}
+.bk-what{grid-column:1;font-size:.88rem;color:var(--muted);line-height:1.4}
+.bk .pill{grid-column:2;grid-row:1}
+.bk-go{grid-column:2;grid-row:2;justify-self:end;font-size:.9rem;font-weight:700;color:var(--text)}
+.bk.past{background:transparent}
+.my-sec{font-family:var(--title);text-transform:uppercase;font-weight:900;letter-spacing:-.02em;word-spacing:.12em;
+  font-size:1.25rem;margin:1.8rem 0 .8rem}
+.my-sec:first-child{margin-top:0}
+
+/* portal overview: next booking + unread line */
+a.my-next{text-decoration:none;color:var(--text);display:grid;gap:.25rem}
+a.my-next:hover{border-color:var(--blue)}
+.my-next .lbl{font-size:.76rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue-deep)}
+.my-next .when{font-family:var(--title);font-weight:900;font-size:1.3rem;line-height:1.15;letter-spacing:-.01em}
+.my-next .what{color:var(--muted);font-size:.92rem}
+.my-next .foot{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-top:.5rem;font-weight:700;font-size:.9rem}
+.my-unread{display:flex;align-items:center;gap:.6rem;min-height:48px;padding:.6rem 1rem;margin-bottom:1rem;border-radius:16px;
+  background:var(--sky);color:var(--ink);font-weight:600;text-decoration:none;border:1px solid rgba(0,102,214,.25)}
+.my-unread:hover{border-color:var(--blue)}
+.my-unread .my-badge{box-shadow:none}
+
+/* ─── cars ─── */
+.car{display:grid;gap:.15rem}
+.car-name{font-family:var(--title);font-weight:900;font-size:1.2rem;line-height:1.15;letter-spacing:-.01em}
+.car-meta{color:var(--muted);font-size:.9rem}
+.car-notes{font-size:.9rem;color:var(--text);margin-top:.3rem;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* ─── forms ─── */
+.my-form .field{margin-bottom:1rem}
+.my-form input:not([type=checkbox]):not([type=radio]),.my-form select,.my-form textarea{width:100%;font-size:1rem;min-height:48px}
+.my-form textarea{min-height:90px}
+.my-form input[readonly]{background:var(--raised);color:var(--muted)}
+.my-form .opts.v3{grid-template-columns:repeat(3,1fr)}
+.my-form .opt span{min-height:48px;justify-content:center;align-items:center;text-align:center}
+.my-fieldset{border:0;padding:0;margin:0 0 1rem;min-width:0}
+.my-fieldset legend{padding:0;margin-bottom:.45rem;font-family:var(--body);font-size:.74rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text)}
+.field .optional{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)}
+.check{display:flex;align-items:flex-start;gap:.75rem;min-height:44px;padding:.4rem 0;cursor:pointer;
+  font-size:.98rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text);line-height:1.45}
+.check input{flex:none;width:24px;height:24px;margin-top:.05rem;accent-color:var(--blue-solid)}
+.check small{display:block;color:var(--muted);font-size:.85rem}
+
+/* small screens: buttons in a stack */
+@media(max-width:420px){
+  .my-actions .btn,.my-contact .btn{flex-basis:100%}
+}
+
+/* ─── print: only the receipt ─── */
+@media print{
+  @page{margin:14mm}
+  body{background:#fff !important;color:#000}
+  header,footer,#installBar,.my-nav,.no-print{display:none !important}
+  .app-main{width:100%;padding:0;margin:0}
+  body.has-receipt .app-main>:not(#receipt){display:none !important}
+  .receipt{border:0 !important;box-shadow:none !important;padding:0 !important;margin:0 !important}
+  .receipt .my-row{border-bottom-color:#bbb}
+  .receipt-top img{filter:brightness(0)}
+  a{text-decoration:none}
+}

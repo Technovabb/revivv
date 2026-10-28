@@ -267,7 +267,7 @@ export async function buildApp({ config, pool, mailer, logger = true }) {
 
   app.get('/staff/me', async req => {
     const a = await actorFor(req);
-    return { data: a?.staff ? { name: a.name, role: a.role, email: a.email } : null };
+    return { data: a?.staff ? { id: a.id, name: a.name, role: a.role, email: a.email } : null };
   });
 
   app.get('/health', async () => {

@@ -1,0 +1,39 @@
+<!--meta {
+  "title": "Booking",
+  "description": "Revivv back office: one booking, its steps, job card, photos and payments.",
+  "bodyClass": "page-staff page-office",
+  "noindex": true,
+  "chrome": "app",
+  "styles": ["assets/css/office.css"],
+  "scripts": ["assets/js/api.js", "assets/js/office.js", "assets/js/office-booking.js"]
+} -->
+<style>
+.page-office .check{text-transform:none;letter-spacing:0;font-weight:500;color:var(--text);min-height:44px}
+.bk-ref{font-size:.78rem;color:var(--dim);margin-top:.15rem;font-variant-numeric:tabular-nums}
+.bk-head-right{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem}
+.bk-acts{margin-top:0}
+.bk-acts + .bk-acts{margin-top:.5rem}
+.bk-pay{display:flex;justify-content:space-between;gap:.8rem;padding:.55rem 0;border-bottom:1px solid var(--line);font-size:.85rem}
+.bk-pay:last-child{border-bottom:none}
+.bk-pay b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bk-pay b.neg{color:var(--red)}
+.bk-pay .dim{font-size:.75rem}
+.bk-owing{color:var(--amber)}
+.bk-paid{color:var(--green)}
+.bk-ph{margin:0;min-width:0}
+.bk-ph figcaption{font-size:.72rem;color:var(--muted);margin-top:.25rem;overflow-wrap:anywhere}
+.photo .del{min-height:44px;min-width:52px;top:0;right:0;border-radius:0 0 0 10px;font-size:.72rem}
+.bk-up{display:grid;gap:.6rem;margin-top:1rem}
+.bk-up .acts{margin-top:0}
+.bk-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.bk-addon{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.bk-addon select{width:auto !important;flex:none}
+.bk-sep{border:none;border-top:1px solid var(--line);margin:.9rem 0}
+.tl li > div{overflow-wrap:anywhere;min-width:0}
+/* phones: one column in a useful order; wide screens: two columns */
+.bk-cols{display:flex;flex-direction:column}
+.bk-col{display:contents}
+.bk-o1{order:1}.bk-o2{order:2}.bk-o3{order:3}.bk-o4{order:4}.bk-o5{order:5}.bk-o6{order:6}
+@media(min-width:900px){.bk-cols{display:grid;grid-template-columns:3fr 2fr;gap:1rem;align-items:start}.bk-col{display:block;min-width:0}}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>

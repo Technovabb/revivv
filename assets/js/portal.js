@@ -43,7 +43,14 @@ async function getAccount(){
   if(error||!data) return null;
   return {name:data.name,since:data.since,stamps:data.stamps,credit:Number(data.credit),
     referral:data.referral,tier:data.tier,discount:Number(data.discount),
-    history:(data.history||[]).map(x=>({date:x.date,job:x.job,paid:Number(x.paid)}))};
+    history:(data.history||[]).map(x=>({date:x.date,job:x.job,paid:Number(x.paid)})),
+    next:data.next||null,unread:Number(data.unread)||0};
+}
+/* After signing in, go back to the My Revivv page that sent them here (?next=).
+   Only my-*.html or portal.html on this site, never another address. */
+function nextPage(){
+  const n=new URLSearchParams(location.search).get("next")||"";
+  return /^(?:my-[a-z]+(?:-[a-z]+)*|portal)\.html(?:\?[\w.~%=&+-]*)?(?:#[\w-]*)?$/.test(n)?n:null;
 }
 function tierOf(c){return {key:(c.tier||"Regular").toLowerCase(),label:c.tier||"Regular",off:c.discount||0};}
 
@@ -68,6 +75,26 @@ function renderAccount(){
   document.getElementById("acctHist").innerHTML=customer.history.length
     ? customer.history.map(x=>'<p class="h"><b>'+x.job+'</b><span>'+x.date+' · $'+x.paid+'</span></p>').join("")
     : '<p class="slot-empty">No completed details yet. Your first stamp lands once we have done the job.</p>';
+  renderMine();
+}
+
+/* My Revivv bits (helpers from assets/js/my.js): text only, never HTML */
+function renderMine(){
+  const my=window.my;if(!my)return;
+  const n=customer.unread||0,ul=document.getElementById("unreadLine");
+  ul.classList.toggle("hide",!n);
+  if(n)ul.replaceChildren(my.el("span",{class:"my-badge","aria-hidden":"true",text:n>99?"99+":n}),
+    my.el("span",{text:(n===1?"1 new message":n+" new messages")+" from Revivv. Read "+(n===1?"it":"them")+" →"}));
+  const nx=customer.next,nc=document.getElementById("nextCard");
+  nc.classList.toggle("hide",!nx);
+  if(nx){
+    nc.href=my.bookingLink(nx.ref,nx.key);
+    nc.replaceChildren(my.el("span",{class:"lbl",text:"Your next detail"}),
+      my.el("span",{class:"when",text:nx.dateText+" · "+nx.slotText}),
+      my.el("span",{class:"what",text:nx.package+" · "+my.carText(nx.vehicleType,nx.vehicleDesc)}),
+      my.el("span",{class:"foot"},my.pill(nx.status,nx.statusLabel),my.el("span",{text:"See booking →"})));
+  }
+  my.markNav();my.showNav(true);my.setBadge(n);
 }
 
 function showAccount(){
@@ -113,6 +140,8 @@ async function doAuth(){
       if(/invalid login/i.test(error.message)) throw new Error("Wrong email or password.");
       throw new Error(error.message);
     }
+    const next=nextPage();
+    if(next){location.replace(next);return;}
     const acct=await getAccount();
     if(!acct){if(offline)return;portalErr.className="msg err";portalErr.textContent="Signed in, but no bookings on that email yet. Book a detail and it'll link up.";return;}
     customer=acct;
@@ -324,5 +353,6 @@ renderCalendar();
     if(isDown(res))offline=true;
   }
   if(offline){goOffline();return;}
+  if(nextPage()){const {data:{session}}=await sb.auth.getSession();if(session){location.replace(nextPage());return;}}
   const acct=await getAccount();if(acct){customer=acct;showAccount();}
 })();

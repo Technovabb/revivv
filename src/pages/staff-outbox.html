@@ -1,0 +1,26 @@
+<!--meta {
+  "title": "Staff",
+  "description": "Revivv back office: emails sent and waiting.",
+  "bodyClass": "page-staff page-office",
+  "noindex": true,
+  "chrome": "app",
+  "styles": ["assets/css/office.css"],
+  "scripts": ["assets/js/api.js", "assets/js/office.js", "assets/js/office-outbox.js"]
+} -->
+<style>
+.page-office .chips button{min-height:44px}
+.count{margin:-.3rem 0 .6rem}
+details.mail summary{list-style:none;cursor:pointer}
+details.mail summary::-webkit-details-marker{display:none}
+details.mail .mail-head{min-width:0}
+details.mail h3{overflow-wrap:anywhere}
+details.mail .meta{overflow-wrap:anywhere}
+details.mail .more{display:block;margin-top:.45rem;font-size:.75rem;font-weight:600;color:var(--blue-lt)}
+details.mail .more::after{content:"Read it \25BE"}
+details.mail[open] .more::after{content:"Close \25B4"}
+details.mail[open]{border-color:var(--line-2)}
+.mail-body{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg-2);border:1px solid var(--line);border-radius:9px;
+  padding:.8rem .9rem;margin:.8rem 0 .5rem;font-size:.88rem;line-height:1.55;color:var(--text)}
+.offscreen{position:fixed;left:-9999px;top:0}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>

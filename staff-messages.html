@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages — Revivv Vehicle Detailing</title>
+<meta name="description" content="Revivv back office: conversations with customers.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F6F5F0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Revivv">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="assets/css/site.css?v=435f48b3">
+<link rel="stylesheet" href="assets/css/office.css?v=435f48b3">
+</head>
+<body id="top" class="page-staff page-office">
+
+
+
+
+<style>
+  .m-cols{display:grid;gap:1rem;grid-template-columns:minmax(0,1fr)}
+  .m-tools{margin-bottom:.4rem}
+  .m-row h3{display:flex;align-items:center;gap:.45rem;min-width:0;overflow-wrap:anywhere}
+  .m-row time{flex:none;font-size:.72rem;color:var(--dim);white-space:nowrap}
+  .m-row .prev{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+  .m-row.unread h3{font-weight:800}
+  .m-row.unread .prev{color:var(--text)}
+  .m-row.sel{border-color:var(--blue);background:var(--raised)}
+  .m-convo{min-width:0}
+  .m-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem .8rem;margin-bottom:.6rem}
+  .m-head h2{margin:0;overflow-wrap:anywhere}
+  .m-head h2 a{color:inherit}
+  .m-head .acts{margin:0;flex:1 1 220px;justify-content:flex-end}
+  .m-head .acts .btn{flex:0 1 auto}
+  .m-back{margin-bottom:.6rem}
+  .m-convo .thread{min-height:200px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:.6rem .1rem}
+  .bubble a{color:inherit;text-decoration:underline}
+  .bubble .who{font-weight:600}
+  .m-about{margin:.8rem 0 0}
+  .m-convo .composer{margin-top:.6rem}
+  .m-convo .composer textarea{max-height:160px}
+  .m-convo .composer .btn{flex:none}
+  .m-note{margin:.5rem 0 0}
+  .m-pick{color:var(--dim);text-align:center;padding:3rem 1rem}
+  @media(min-width:900px){
+    .m-cols{grid-template-columns:minmax(260px,2fr) minmax(0,3fr);align-items:start}
+    .m-inbox{position:sticky;top:110px;max-height:calc(100vh - 130px);overflow-y:auto;padding-right:.2rem}
+    .m-back{display:none !important}
+  }
+  @media(max-width:899px){
+    .m-page.open .o-title,.m-page.open .m-inbox{display:none}
+    .m-page:not(.open) .m-convo{display:none}
+    .m-page.open .m-cols{margin-top:1rem}
+  }
+</style>
+<div id="office"><p class="loading">Loading…</p></div>
+
+
+
+
+
+
+<script src="assets/js/api.js?v=435f48b3"></script>
+<script src="assets/js/office.js?v=435f48b3"></script>
+<script src="assets/js/office-messages.js?v=435f48b3"></script>
+<script>
+(function(){
+  var y = new Date().getFullYear();
+  ['yr','yr2'].forEach(function(id){ var e = document.getElementById(id); if (e) e.textContent = y; });
+  // phone menu: the Menu button opens the full page list
+  var btn = document.querySelector('.menu-button'), hd = btn && btn.closest('header');
+  if (btn && hd) {
+    var setMenu = function(open){
+      hd.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Close' : 'Menu';
+      document.body.classList.toggle('menu-open', open);
+    };
+    btn.addEventListener('click', function(){ setMenu(!hd.classList.contains('open')); });
+    hd.querySelectorAll('nav a').forEach(function(a){ a.addEventListener('click', function(){ setMenu(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && hd.classList.contains('open')) { setMenu(false); btn.focus(); } });
+    window.matchMedia('(min-width:901px)').addEventListener('change', function(e){ if (e.matches) setMenu(false); });
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
+  }
+})();
+</script>
+</body>
+</html>

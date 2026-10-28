@@ -1,0 +1,20 @@
+<!--meta {
+  "title": "Your booking",
+  "description": "Your Revivv booking: where it's up to, payments, photos and messages.",
+  "bodyClass": "page-portal page-my page-my-booking",
+  "noindex": true,
+  "nav": "portal",
+  "styles": ["assets/css/my.css"],
+  "scripts": [
+    "assets/js/api.js",
+    "assets/js/my.js",
+    "assets/js/my-booking.js"
+  ]
+} -->
+
+<main class="app-main">
+  <!--include my-nav-->
+  <div id="myRoot"><p class="my-loading" role="status">Loading your booking…</p></div>
+  <!-- filled by my-booking.js when there are payments; the only thing that prints -->
+  <section class="card receipt" id="receipt" aria-labelledby="receiptTitle" hidden></section>
+</main>

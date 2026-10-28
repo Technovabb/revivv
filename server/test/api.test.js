@@ -102,7 +102,8 @@ test('staff calls need a staff account', async () => {
   assert.equal((await customer.get('/staff/me')).body.data, null);
 
   const staff = await makeStaff();
-  assert.deepEqual((await staff.get('/staff/me')).body.data, { name: 'Andre', role: 'owner', email: 'staff@revivvbb.com' });
+  const me = (await staff.get('/staff/me')).body.data;
+  assert.deepEqual({ ...me, id: typeof me.id }, { id: 'number', name: 'Andre', role: 'owner', email: 'staff@revivvbb.com' });
   await client(t.app).rpc('create_booking', booking({ p_date: d, p_slot: 'late', p_email: 'z@example.com', p_name: 'Zed' }));
   await client(t.app).rpc('create_booking', booking({ p_date: d, p_slot: 'morning', p_email: 'y@example.com', p_name: 'Yan', p_location: 'Mobile — we come to them', p_address: '1 Bay St' }));
   const day = (await staff.rpc('staff_day', { d })).body.data;

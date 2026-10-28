@@ -33,11 +33,13 @@ function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'
 
 const layout = fs.readFileSync(path.join(SRC, 'layout.html'), 'utf8');
 
-// Cache-busting version: a short hash of the CSS + every JS file.
+// Cache-busting version: a short hash of every CSS and JS file.
 const jsDir = path.join(ROOT, 'assets/js');
+const cssDir = path.join(ROOT, 'assets/css');
 const jsFiles = fs.existsSync(jsDir) ? fs.readdirSync(jsDir).filter(f => f.endsWith('.js')).sort() : [];
+const cssFiles = fs.readdirSync(cssDir).filter(f => f.endsWith('.css')).sort();
 const h = crypto.createHash('md5');
-h.update(fs.readFileSync(path.join(ROOT, 'assets/css/site.css')));
+cssFiles.forEach(f => h.update(fs.readFileSync(path.join(cssDir, f))));
 jsFiles.forEach(f => h.update(fs.readFileSync(path.join(jsDir, f))));
 const version = h.digest('hex').slice(0, 8);
 

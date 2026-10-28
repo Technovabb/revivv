@@ -1,0 +1,46 @@
+<!--meta {
+  "title": "Messages",
+  "description": "Revivv back office: conversations with customers.",
+  "bodyClass": "page-staff page-office",
+  "noindex": true,
+  "chrome": "app",
+  "styles": ["assets/css/office.css"],
+  "scripts": ["assets/js/api.js", "assets/js/office.js", "assets/js/office-messages.js"]
+} -->
+<style>
+  .m-cols{display:grid;gap:1rem;grid-template-columns:minmax(0,1fr)}
+  .m-tools{margin-bottom:.4rem}
+  .m-row h3{display:flex;align-items:center;gap:.45rem;min-width:0;overflow-wrap:anywhere}
+  .m-row time{flex:none;font-size:.72rem;color:var(--dim);white-space:nowrap}
+  .m-row .prev{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+  .m-row.unread h3{font-weight:800}
+  .m-row.unread .prev{color:var(--text)}
+  .m-row.sel{border-color:var(--blue);background:var(--raised)}
+  .m-convo{min-width:0}
+  .m-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem .8rem;margin-bottom:.6rem}
+  .m-head h2{margin:0;overflow-wrap:anywhere}
+  .m-head h2 a{color:inherit}
+  .m-head .acts{margin:0;flex:1 1 220px;justify-content:flex-end}
+  .m-head .acts .btn{flex:0 1 auto}
+  .m-back{margin-bottom:.6rem}
+  .m-convo .thread{min-height:200px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:.6rem .1rem}
+  .bubble a{color:inherit;text-decoration:underline}
+  .bubble .who{font-weight:600}
+  .m-about{margin:.8rem 0 0}
+  .m-convo .composer{margin-top:.6rem}
+  .m-convo .composer textarea{max-height:160px}
+  .m-convo .composer .btn{flex:none}
+  .m-note{margin:.5rem 0 0}
+  .m-pick{color:var(--dim);text-align:center;padding:3rem 1rem}
+  @media(min-width:900px){
+    .m-cols{grid-template-columns:minmax(260px,2fr) minmax(0,3fr);align-items:start}
+    .m-inbox{position:sticky;top:110px;max-height:calc(100vh - 130px);overflow-y:auto;padding-right:.2rem}
+    .m-back{display:none !important}
+  }
+  @media(max-width:899px){
+    .m-page.open .o-title,.m-page.open .m-inbox{display:none}
+    .m-page:not(.open) .m-convo{display:none}
+    .m-page.open .m-cols{margin-top:1rem}
+  }
+</style>
+<div id="office"><p class="loading">Loading…</p></div>

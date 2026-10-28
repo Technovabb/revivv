@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Staff — Revivv Vehicle Detailing</title>
-<meta name="description" content="Revivv staff console — today’s jobs and customers.">
+<meta name="description" content="Revivv back office: today's jobs.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,120 +18,24 @@
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="images/favicon.png">
 
-<link rel="stylesheet" href="assets/css/site.css?v=93bcab06">
-<link rel="stylesheet" href="assets/css/staff.css?v=93bcab06">
+<link rel="stylesheet" href="assets/css/site.css?v=435f48b3">
+<link rel="stylesheet" href="assets/css/office.css?v=435f48b3">
 </head>
-<body id="top" class="page-staff">
+<body id="top" class="page-staff page-office">
 
 
 
 
-
-<header>
-  <div class="wrap hd">
-    <h1><a href="index.html" style="color:inherit;text-decoration:none">Revivv <span>· Staff</span></a></h1>
-    <div class="hd-right" style="display:flex;align-items:center;gap:1.1rem"><a class="link" href="index.html">← Back to site</a><div id="hdRight"></div></div>
-  </div>
-</header>
-
-<main class="wrap">
-
-  <!-- sign in -->
-  <section class="gate" id="gate">
-    <h2>Staff sign in</h2>
-    <p>Use your staff email and the password you chose from your invite link.</p>
-    <input id="email" type="email" placeholder="your@email.com" autocomplete="username">
-    <span class="pwrap">
-      <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
-      <button type="button" class="peye" id="staffEye" aria-label="Show password">
-        <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
-    </span>
-    <p class="msg" id="gateMsg"></p>
-    <button class="btn btn-primary" id="gateBtn" style="width:100%">Sign in</button>
-  </section>
-
-  <!-- signed in -->
-  <div id="board" class="hide">
-    <div class="tabs">
-      <button id="tabDay" class="on">Today's jobs</button>
-      <button id="tabCust">Customers</button>
-    </div>
-
-  <!-- day view -->
-  <section id="dayView">
-    <div class="vtoggle">
-      <button id="vDay" class="on">Day</button>
-      <button id="vWeek">Week</button>
-      <button id="vMonth">Month</button>
-    </div>
-
-    <div id="dayPane">
-    <div class="daynav">
-      <button id="prev" aria-label="Previous day">‹</button>
-      <strong id="dayLabel">—</strong>
-      <button class="today" id="todayBtn">Today</button>
-      <button id="next" aria-label="Next day">›</button>
-    </div>
-    <input type="date" id="datePick">
-
-    <div class="tally">
-      <div><b id="tJobs">0</b>jobs</div>
-      <div><b id="tDone">0</b>done</div>
-      <div><b id="tMoney">$0</b>booked</div>
-    </div>
-
-    <div id="jobs"></div>
-    </div>
-
-    <div id="weekPane" class="hide">
-      <div class="daynav">
-        <button id="wPrev" aria-label="Previous week">‹</button>
-        <strong id="wLabel">—</strong>
-        <button class="today" id="wThis">This week</button>
-        <button id="wNext" aria-label="Next week">›</button>
-      </div>
-      <div class="tally">
-        <div><b id="wJobs">0</b>jobs</div>
-        <div><b id="wDone">0</b>done</div>
-        <div><b id="wMoney">$0</b>booked</div>
-      </div>
-      <div class="wgrid" id="wGrid"></div>
-      <p class="empty" style="padding:1.2rem 0 0;font-size:.75rem">Tap a day or a job to open it.</p>
-    </div>
-
-    <div id="monthPane" class="hide">
-      <div class="daynav">
-        <button id="mPrev" aria-label="Previous month">‹</button>
-        <strong id="mLabel">—</strong>
-        <button class="today" id="mToday">This month</button>
-        <button id="mNext" aria-label="Next month">›</button>
-      </div>
-      <div class="tally">
-        <div><b id="mJobs">0</b>jobs</div>
-        <div><b id="mDone">0</b>done</div>
-        <div><b id="mMoney">$0</b>booked</div>
-      </div>
-      <div class="mgrid" id="mGrid"></div>
-      <p class="empty" style="padding:1.2rem 0 0;font-size:.75rem">Tap any day to open it.</p>
-    </div>
-  </section>
-
-  <!-- customers -->
-  <section id="custView" class="hide">
-    <input type="text" id="custSearch" placeholder="Search name, phone or email" style="margin-top:1.4rem">
-    <div id="custList"></div>
-  </section>
-  </div>
-</main>
+<div id="office"><p class="loading">Loading…</p></div>
 
 
 
 
 
 
-<script src="assets/js/api.js?v=93bcab06"></script>
-<script src="assets/js/staff.js?v=93bcab06"></script>
+<script src="assets/js/api.js?v=435f48b3"></script>
+<script src="assets/js/office.js?v=435f48b3"></script>
+<script src="assets/js/office-today.js?v=435f48b3"></script>
 <script>
 (function(){
   var y = new Date().getFullYear();

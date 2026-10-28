@@ -1,0 +1,34 @@
+<!--meta {
+  "title": "Staff",
+  "description": "Revivv back office: prices, hours, closed days and emails.",
+  "bodyClass": "page-staff page-office",
+  "noindex": true,
+  "chrome": "app",
+  "styles": ["assets/css/office.css"],
+  "scripts": ["assets/js/api.js", "assets/js/office.js", "assets/js/office-settings.js"]
+} -->
+<style>
+.jump{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.jump a{display:inline-flex;align-items:center;min-height:44px;padding:.4rem .95rem;border-radius:99px;background:var(--panel);
+  border:1px solid var(--line);color:var(--muted);font-size:.8rem;font-weight:600;text-decoration:none}
+.jump a:hover{border-color:var(--blue);color:var(--text)}
+.page-office .card[id]{scroll-margin-top:130px}
+.set-block{border-top:1px solid var(--line);padding:1rem 0 .4rem}
+.set-block:first-of-type{border-top:none;padding-top:.2rem}
+.set-block h3{font-size:1rem;font-weight:600;margin:0 0 .6rem;color:var(--text)}
+.set-sub{font-family:var(--title);text-transform:uppercase;font-size:.85rem;letter-spacing:.03em;margin:1.4rem 0 .5rem;color:var(--text)}
+.page-office .grid3.prices{grid-template-columns:repeat(3,minmax(0,1fr))}
+.addon-line{display:flex;gap:.4rem 1rem;align-items:center;flex-wrap:wrap}
+.addon-line .field{flex:1 1 140px;max-width:220px;margin-bottom:.4rem}
+.addon-line .btn{margin-left:auto}
+.checks{display:flex;gap:.2rem 1.4rem;flex-wrap:wrap}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0 1rem}
+.check{min-height:44px}
+.closed-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid var(--line);padding:.5rem 0}
+.save-row{border-top:1px solid var(--line);padding-top:.9rem}
+.save-row .btn{flex:0 1 220px}
+.msg.warn{color:var(--amber)}
+.ok-line{color:var(--green);font-weight:600}
+.card p + p{margin-top:.5rem}
+</style>
+<div id="office"><p class="loading">Loading…</p></div>

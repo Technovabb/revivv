@@ -28,6 +28,7 @@ export default function accountRpc(r, ctx) {
 
   // Kept in the shape the rewards card and quote page already read, plus more.
   r.customer('my_account', async (p, user) => {
+    await mine(pool, user, { create: true });   // signed up before booking: start their card (and referral code) now
     const c = (await pool.query(
       "select *, to_char(created_at at time zone $2, 'Mon YYYY') as since from customers where lower(email) = lower($1)",
       [user.email, R.TZ])).rows[0];
@@ -120,7 +121,8 @@ export default function accountRpc(r, ctx) {
   r.customer('my_vehicle_remove', async (p, user) => {
     const c = await mine(pool, user);
     if (!c) fail(404, 'That car was not found.');
-    await pool.query('update vehicles set archived_at = now() where id = $1 and customer_id = $2', [posId(p.id, 'car'), c.id]);
+    const u = await pool.query('update vehicles set archived_at = now() where id = $1 and customer_id = $2 and archived_at is null', [posId(p.id, 'car'), c.id]);
+    if (!u.rowCount) fail(404, 'That car was not found.');
     return {};
   });
 

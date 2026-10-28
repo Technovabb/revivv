@@ -10,6 +10,8 @@ import { fail, text, opt } from './util.js';
 import * as R from './rules.js';
 
 const KINDS = ['before', 'after', 'damage'];
+const METHOD = { cash: 'Cash', card: 'Card', bank_transfer: 'Bank transfer', mobile: 'Mobile money', voucher: 'Voucher', other: 'Other' };
+const SOURCE = { website: 'Website', phone: 'Phone', whatsapp: 'WhatsApp', walk_in: 'Walk-in', instagram: 'Instagram', other: 'Other' };
 const MAX_BYTES = 4 * 1024 * 1024;
 
 function sniff(buf) {
@@ -96,7 +98,7 @@ export async function registerFiles(app, ctx, actorFor) {
            from bookings b where b.booking_date between $1 and $2 order by b.booking_date, b.id`, [from, to]);
       rows = [['Ref', 'Date', 'Slot', 'Status', 'Source', 'Customer', 'Phone', 'Email', 'Package', 'Vehicle', 'Vehicle details',
         'Add-ons', 'Where', 'Parish', 'Price', 'Paid', 'Half-price reward', 'Credit used', 'Booked at']]
-        .concat(r.rows.map(x => [x.ref, x.booking_date, x.slot, R.STATUS_LABEL[x.status], x.source, x.name, x.phone, x.email, x.package,
+        .concat(r.rows.map(x => [x.ref, x.booking_date, x.slot, R.STATUS_LABEL[x.status], SOURCE[x.source] || x.source, x.name, x.phone, x.email, x.package,
           x.vehicle_type, x.vehicle_desc, x.addons, x.location, x.parish, x.total, x.paid, x.reward_applied ? 'yes' : '', x.credit_used,
           new Date(x.created_at).toISOString()]));
       name = `revivv-bookings-${from}-to-${to}.csv`;
@@ -107,7 +109,7 @@ export async function registerFiles(app, ctx, actorFor) {
            left join vouchers v on v.id = p.voucher_id
           where (p.created_at at time zone '${R.TZ}')::date between $1 and $2 order by p.id`, [from, to]);
       rows = [['Date and time (Barbados)', 'Ref', 'Customer', 'Method', 'Amount', 'Note', 'Taken by', 'Voucher']]
-        .concat(r.rows.map(x => [x.at, x.ref, x.name, x.method, x.amount, x.note, x.taken_by, x.code]));
+        .concat(r.rows.map(x => [x.at, x.ref, x.name, METHOD[x.method] || x.method, x.amount, x.note, x.taken_by, x.code]));
       name = `revivv-payments-${from}-to-${to}.csv`;
     } else {
       fail(404, 'Not found.');

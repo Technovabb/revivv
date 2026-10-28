@@ -213,7 +213,7 @@ export default function officeRpc(r, ctx) {
       total = Math.max(0, round2(t - creditUsed));
       changes.push(`price $${Number(b.total)} → $${total}`);
     }
-    let priceNote = b.price_note;
+    let priceNote = priced ? null : b.price_note;   // a worked-out price drops the old by-hand note
     if (p.total !== undefined && p.total !== null && p.total !== '') {
       if (!user.owner) fail(403, 'Only the owners can change a price by hand.');
       const t = money(p.total, 'The price');
@@ -276,8 +276,9 @@ export default function officeRpc(r, ctx) {
       let c = c0 ? (await db.query('select * from customers where id = $1 for update', [c0.id])).rows[0]
         : await customerForEmail(db, input.email, true);
       if (!c) c = await newCustomer(db, { email: input.email, name: input.name, phone: input.phone, address: input.address, parish: input.parish });
-      const account = p.use_rewards === false ? null : await accountState(db, c);
-      if (slot.goldOnly && account?.tier !== 'Gold' && !user.owner) fail(400, 'The priority slot is for Gold members.');
+      const state = await accountState(db, c);
+      const account = p.use_rewards === false ? null : state;
+      if (slot.goldOnly && state.tier !== 'Gold' && !user.owner) fail(400, 'The priority slot is for Gold members.');
       const price = R.priceBooking({ catalog: s.catalog, pkg: input.pkg, vehicle: input.vehicleType, addons: input.addons, account, activeOnly: false });
       let total = price.total, priceNote = null;
       if (p.total != null && p.total !== '') {
@@ -334,7 +335,10 @@ export default function officeRpc(r, ctx) {
     spend: Number(c.spend), owing: Number(c.owing), reminders: c.reminders
   });
 
-  async function listCustomers(p) {
+  // Crew don't see what customers have spent.
+  const forRole = (row, user) => { if (!user?.owner) delete row.spend; return row; };
+
+  async function listCustomers(p, user) {
     const s = await getSettings(pool);
     const today = R.todayISO();
     const q = maxLen(text(p.q ?? ''), 100, 'The search');
@@ -353,14 +357,14 @@ export default function officeRpc(r, ctx) {
     if (p.filter === 'top') where.push('coalesce(m.spend, 0) > 0');
     const order = p.filter === 'top' ? 'spend desc' : p.filter === 'due' ? 'v.last_visit' : 'lower(c.name)';
     const rows = (await pool.query(`${customerSql} ${where.length ? 'where ' + where.join(' and ') : ''} order by ${order} limit 300`, args)).rows;
-    return rows.map(custRow);
+    return rows.map(c => forRole(custRow(c), user));
   }
   r.staff('staff_customers', listCustomers);
   // Kept for the first staff console's search box.
-  r.staff('staff_find_customers', async p => (await listCustomers({ q: p.q }))
+  r.staff('staff_find_customers', async (p, user) => (await listCustomers({ q: p.q }, user))
     .map(c => ({ ...c, last_visit: c.lastVisit, next_date: c.nextDate, next_slot: c.nextSlot })));
 
-  r.staff('staff_customer', async p => {
+  r.staff('staff_customer', async (p, user) => {
     const id = posId(p.id, 'customer');
     const s = await getSettings(pool);
     const c = (await pool.query(`${customerSql} where c.id = $3`, [R.todayISO(), R.OPEN, id])).rows[0];
@@ -374,18 +378,24 @@ export default function officeRpc(r, ctx) {
     const referred = (await pool.query('select id, name, referral_paid_at from customers where referred_by = $1 order by id', [id])).rows;
     const account = (await pool.query('select 1 from users where lower(email) = lower($1)', [full.email || ''])).rowCount > 0;
     return {
-      ...custRow(c), address: full.address, parish: full.parish, notes: full.notes, referralCode: full.referral_code, since: full.created_at,
-      hasAccount: account, referredBy, referred, vehicles, bookings: list.map(b => job(b, s))
+      ...forRole(custRow(c), user), address: full.address, parish: full.parish, notes: full.notes, referralCode: full.referral_code, since: full.created_at,
+      hasAccount: account, referredBy, referred: referred.map(x => ({ id: x.id, name: x.name, paidAt: x.referral_paid_at })),
+      vehicles, bookings: list.map(b => job(b, s))
     };
   });
 
+  // Add a customer, or change one. When changing, anything not sent stays as it was.
   r.staff('staff_customer_save', async (p, user) => tx(pool, async db => {
-    const name = maxLen(text(p.name), 100, 'The name');
+    const old = p.id ? (await db.query('select * from customers where id = $1 for update', [posId(p.id, 'customer')])).rows[0] : null;
+    if (p.id && !old) fail(404, 'That customer was not found.');
+    const pick = (k, col = k) => (p[k] !== undefined ? p[k] : old?.[col]);
+    const name = maxLen(text(pick('name')), 100, 'The name');
     if (!name) fail(400, 'Enter the customer\'s name.');
-    const rawEmail = text(p.email), email = cleanEmail(rawEmail);
+    const rawEmail = text(pick('email')), email = cleanEmail(rawEmail);
     if (rawEmail && !email) fail(400, 'That email address doesn\'t look right.');
-    const phone = maxLen(text(p.phone), 40, 'The phone');
-    const fields = [name, email || null, phone || null, opt(p.address, 300, 'The address'), opt(p.parish, 40, 'The parish'), opt(p.notes, 2000, 'The notes'), p.reminders !== false];
+    const phone = maxLen(text(pick('phone')), 40, 'The phone');
+    const fields = [name, email || null, phone || null, opt(pick('address'), 300, 'The address'), opt(pick('parish'), 40, 'The parish'),
+      opt(pick('notes'), 2000, 'The notes'), p.reminders !== undefined ? p.reminders !== false : (old ? old.reminders : true)];
     if (email) {
       const other = (await db.query('select id, name from customers where lower(email) = $1 and id <> $2', [email, p.id ? Number(p.id) : 0])).rows[0];
       if (other) fail(409, `${other.name} already uses that email.`);
@@ -420,8 +430,12 @@ export default function officeRpc(r, ctx) {
     return {};
   });
 
-  r.staff('staff_vehicle_archive', async p => {
-    await pool.query('update vehicles set archived_at = now() where id = $1', [posId(p.id, 'car')]);
+  r.staff('staff_vehicle_archive', async (p, user) => {
+    const v = (await pool.query(
+      `update vehicles v set archived_at = now() from customers c
+        where v.id = $1 and v.archived_at is null and c.id = v.customer_id returning v.description, c.name`, [posId(p.id, 'car')])).rows[0];
+    if (!v) fail(404, 'That car was not found.');
+    await audit(pool, user, 'car.removed', `${v.description || 'a car'} (${v.name})`);
     return {};
   });
 

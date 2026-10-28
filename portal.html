@@ -18,8 +18,8 @@
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="images/favicon.png">
 
-<link rel="stylesheet" href="assets/css/site.css?v=93bcab06">
-
+<link rel="stylesheet" href="assets/css/site.css?v=435f48b3">
+<link rel="stylesheet" href="assets/css/my.css?v=435f48b3">
 </head>
 <body id="top" class="page-portal">
 
@@ -33,7 +33,7 @@
         <li><a class="navlink" href="work.html">The work</a></li>
         <li><a class="navlink" href="quote.html">Quote</a></li>
         <li><a class="navlink" href="rewards.html">Rewards</a></li>
-        <li><a class="navlink" href="portal.html">My Rewards</a></li>
+        <li><a class="navlink is-active" href="portal.html">My Rewards</a></li>
         <li class="keep"><a class="btn-sm" href="quote.html#book">Book now</a></li>
       </ul>
     </nav>
@@ -84,6 +84,14 @@
 
   <!-- SIGNED IN -->
   <section class="acct hide" id="signedIn">
+    <nav class="my-nav" aria-label="My Revivv">
+  <a class="my-tab" href="portal.html" data-my-page="portal">Overview</a>
+  <a class="my-tab" href="my-bookings.html" data-my-page="my-bookings my-booking">Bookings</a>
+  <a class="my-tab" href="my-messages.html" data-my-page="my-messages">Messages<span class="my-badge" data-my-unread hidden></span></a>
+  <a class="my-tab" href="my-cars.html" data-my-page="my-cars">Cars</a>
+  <a class="my-tab" href="my-account.html" data-my-page="my-account">Account</a>
+</nav>
+
     <div class="acct-top">
       <div>
         <h1 class="title" id="acctName">—</h1>
@@ -94,6 +102,10 @@
         <button class="out hide" id="signOutBtn">Sign out</button>
       </div>
     </div>
+
+    <!-- new messages + next booking (filled by portal.js from my_account) -->
+    <a class="my-unread hide" id="unreadLine" href="my-messages.html"></a>
+    <a class="card my-next hide" id="nextCard" href="my-bookings.html"></a>
 
     <!-- stamp card -->
     <div class="card">
@@ -208,7 +220,7 @@
     <p class="msg" id="bookMsg" role="status" aria-live="polite"></p>
     <button class="btn btn-primary" id="bookBtn" style="width:100%">Send booking request</button>
 
-    <p class="foot-link"><a href="index.html">View the full Revivv site →</a><br><span style="color:#333;font-size:.7rem">v93bcab06</span></p>
+    <p class="foot-link"><a href="index.html">View the full Revivv site →</a><br><span style="color:#333;font-size:.7rem">v435f48b3</span></p>
   </section>
 </main>
 
@@ -245,13 +257,14 @@
       </a>
     </div>
   </div>
-  <div class="wrap legal">© <span id="yr2"></span> Revivv Vehicle Detailing. <span>v93bcab06</span> · Also mobile — if you can't come to us, we'll come to you.</div>
+  <div class="wrap legal">© <span id="yr2"></span> Revivv Vehicle Detailing. <span>v435f48b3</span> · Also mobile — if you can't come to us, we'll come to you.</div>
   <div class="wrap legal hide">© <span id="yr"></span> Revivv Vehicle Detailing. Also mobile — if you can't come to us, we'll come to you.</div>
 </footer>
 
 
-<script src="assets/js/api.js?v=93bcab06"></script>
-<script src="assets/js/portal.js?v=93bcab06"></script>
+<script src="assets/js/api.js?v=435f48b3"></script>
+<script src="assets/js/my.js?v=435f48b3"></script>
+<script src="assets/js/portal.js?v=435f48b3"></script>
 <script>
 (function(){
   var y = new Date().getFullYear();
