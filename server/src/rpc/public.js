@@ -49,7 +49,7 @@ export default function publicRpc(r, ctx) {
   r.public('slots_taken', async p => {
     if (!R.isISODate(p.d)) fail(400, 'Pick a valid date.');
     const s = await getSettings(pool);
-    const closed = s.hours.closedWeekdays.includes(R.weekday(p.d)) && !R.isSunday(p.d)
+    const closed = s.hours.closedWeekdays.includes(R.weekday(p.d))
       || (await pool.query('select 1 from closed_days where day = $1', [p.d])).rowCount;
     if (closed) return s.hours.slots.map(x => x.id);
     const taken = await pool.query(

@@ -61,7 +61,7 @@ const business = {
   sameAs: ['https://instagram.com/revivv.bb'],
   openingHoursSpecification: [{
     '@type': 'OpeningHoursSpecification',
-    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    dayOfWeek: ['Saturday', 'Sunday'],
     opens: '08:00', closes: '18:00'
   }]
 };

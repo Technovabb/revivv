@@ -206,7 +206,7 @@
       msg,
       el("p", { class: "hint", text: "Enter sends. Shift + Enter makes a new line." }));
     const node = el("div", { class: "chat" },
-      el("p", { class: "chat-note", text: intro || "We usually reply within a few hours, Monday to Saturday." }), box, form);
+      el("p", { class: "chat-note", text: intro || "We'll reply as soon as we can." }), box, form);
 
     let lastId = 0, count = 0, lastDay = "";
     function bubble(m) {

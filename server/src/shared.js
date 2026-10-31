@@ -91,9 +91,7 @@ export async function checkBooking(db, b, s, { staff = false } = {}) {
   if (b.date < today) fail(400, 'That date has passed. Please pick another.');
   if (b.date > R.addDays(today, s.hours.bookAheadDays)) fail(400, 'Please pick a date closer to today.');
   if (!staff) {
-    if (s.hours.closedWeekdays.includes(R.weekday(b.date))) {
-      fail(400, R.isSunday(b.date) ? `Sundays are by appointment. Please call ${phone}.` : `We're closed that day. Please pick another, or call ${phone}.`);
-    }
+    if (s.hours.closedWeekdays.includes(R.weekday(b.date))) fail(400, `We're closed that day. Please pick another, or call ${phone}.`);
     const closed = (await db.query('select reason from closed_days where day = $1', [b.date])).rows[0];
     if (closed) fail(400, `We're closed on that day${closed.reason ? ` (${closed.reason})` : ''}. Please pick another.`);
   }

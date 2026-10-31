@@ -7,7 +7,10 @@ import { createPool } from '../src/db.js';
 import { migrate } from '../src/migrate.js';
 import { buildApp } from '../src/app.js';
 import { createJobs } from '../src/jobs.js';
-import { todayISO, addDays, isSunday } from '../src/rules.js';
+import { todayISO, addDays, weekday } from '../src/rules.js';
+import { DEFAULTS } from '../src/settings.js';
+
+const CLOSED = DEFAULTS.hours.closedWeekdays;
 
 export const ORIGIN = 'https://revivvbb.com';
 
@@ -68,13 +71,20 @@ export function client(app, origin = ORIGIN) {
   };
 }
 
-// The n-th bookable weekday from tomorrow (skips Sundays).
+// The n-th day from tomorrow that customers can book (skips closed weekdays).
 export function workday(n = 0) {
   let d = addDays(todayISO(), 1), seen = -1;
   for (;;) {
-    if (!isSunday(d) && ++seen === n) return d;
+    if (!CLOSED.includes(weekday(d)) && ++seen === n) return d;
     d = addDays(d, 1);
   }
+}
+
+// The first closed weekday from tomorrow (customers can't book it; staff can).
+export function closedDay() {
+  let d = addDays(todayISO(), 1);
+  while (!CLOSED.includes(weekday(d))) d = addDays(d, 1);
+  return d;
 }
 
 export function booking(over = {}) {

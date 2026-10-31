@@ -144,7 +144,7 @@ The script was `server/src/import-supabase.js`. It only writes into an empty dat
   - **Referrals:** both people get $25 when the new customer's first detail is completed.
   - **Spending:** credit is used by a signed-in booking.
   - **Refunds:** cancelling that booking gives the credit back.
-- **Slots:** one booking per slot per day. Cancelling (or a no-show) frees the slot. Sundays and closed days are by phone: staff can still book them.
+- **Slots:** one booking per slot per day. Cancelling (or a no-show) frees the slot. Revivv is open Saturday and Sunday only (Monday to Friday are closed weekdays in Settings). Closed weekdays and closed days are by phone: staff can still book them.
 - **Payments:**
   - Staff record what was paid (cash, card, bank transfer, mobile, voucher), so every booking shows paid or owing.
   - Refunds are owners only.

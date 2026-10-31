@@ -1,7 +1,7 @@
 // Version 2: booking steps, messages, phone bookings, money, settings, jobs, photos and staff.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startTestServer, client, booking, workday } from './helpers.js';
+import { startTestServer, client, booking, workday, closedDay } from './helpers.js';
 import { buildApp } from '../src/app.js';
 import { todayISO, addDays } from '../src/rules.js';
 
@@ -128,10 +128,11 @@ test('phone bookings, price changes by hand, and what crew can and cannot do', a
   const ov = ok(await crew.rpc('staff_overview'));
   assert.equal(ov.money, undefined);
   assert.ok(ok(await owner.rpc('staff_overview')).money);
-  // Sunday is closed for website bookings but staff can book it
-  let sunday = workday(0); while (new Date(sunday + 'T00:00:00Z').getUTCDay() !== 0) sunday = addDays(sunday, 1);
-  assert.equal((await client(t.app).rpc('create_booking', booking({ p_date: sunday }))).status, 400);
-  ok(await crew.rpc('staff_create_booking', { name: 'Sunday Sam', phone: '246 555 1212', date: sunday, slot: 'morning', vehicle_type: 'Car', package: 'The Express Exterior' }));
+  // Weekdays are closed for website bookings (open Saturday and Sunday) but staff can book them
+  const weekday = closedDay();
+  assert.equal((await client(t.app).rpc('create_booking', booking({ p_date: weekday }))).status, 400);
+  assert.equal((await client(t.app).rpc('slots_taken', { d: weekday })).body.data.length, 4);
+  ok(await crew.rpc('staff_create_booking', { name: 'Weekday Wes', phone: '246 555 1212', date: weekday, slot: 'morning', vehicle_type: 'Car', package: 'The Express Exterior' }));
 });
 
 test('payments, refunds and gift vouchers', async () => {

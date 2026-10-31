@@ -427,8 +427,9 @@ const SLOTS = [
   { id:"late",      label:"Late afternoon", time:"4:00pm – 6:00pm",  goldOnly:false, long:false }
 ];
 /* Closed days and how far ahead people can book: the owners set these in the
-   back office, and applySiteInfo() below loads them. Sunday is by appointment. */
-let CLOSED_DAYS = new Set(), CLOSED_WD = [0], BOOK_AHEAD = 366, selectedSlotId = null;
+   back office, and applySiteInfo() below loads them. Open Saturday and Sunday only. */
+const WEEKDAYS_CLOSED = [1, 2, 3, 4, 5];
+let CLOSED_DAYS = new Set(), CLOSED_WD = WEEKDAYS_CLOSED, BOOK_AHEAD = 366, selectedSlotId = null;
 const RevivvSchedule = {
   async getTakenSlots(iso){
     if (!LIVE || offline) return [];
@@ -468,7 +469,7 @@ function renderCalendar(){
     const date = new Date(viewY, viewM, d);
     const key  = isoOf(date);
     const last = new Date(today); last.setDate(last.getDate() + BOOK_AHEAD);
-    // past, too far ahead, a weekly closed day (Sunday is by appointment) or a closed date
+    // past, too far ahead, a weekly closed day or a closed date
     const off  = date < today || date > last || CLOSED_WD.includes(date.getDay()) || CLOSED_DAYS.has(key);
     const cls  = ["day"];
     if (key === isoOf(today))  cls.push("today");
@@ -801,7 +802,7 @@ function applySiteInfo(info){
 
   if ((info.slots || []).length) SLOTS.splice(0, SLOTS.length, ...info.slots);
   CLOSED_DAYS = new Set((info.closedDays || []).map(d => d.day));
-  CLOSED_WD = info.closedWeekdays || [0];
+  CLOSED_WD = info.closedWeekdays || WEEKDAYS_CLOSED;
   BOOK_AHEAD = info.bookAheadDays || 366;
   renderCalendar();
   update();

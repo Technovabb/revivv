@@ -39,7 +39,7 @@
     root.replaceChildren(
       el("div", { class: "my-head" },
         el("h1", { class: "title", text: "Messages" }),
-        el("p", { text: "Ask us anything about your bookings, your car or our packages. We usually reply within a few hours, Monday to Saturday." })),
+        el("p", { text: "Ask us anything about your bookings, your car or our packages. We'll reply as soon as we can." })),
       el("section", { class: "card", "aria-label": "Conversation with Revivv" }, warn, talk.node),
       el("p", { class: "hint" }, "In a hurry? ", el("a", { href: M.WA, target: "_blank", rel: "noopener" }, "WhatsApp us"),
         " or call ", el("a", { href: M.TEL }, M.PHONE), "."));

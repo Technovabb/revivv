@@ -22,19 +22,18 @@
     const c = (info.closedDays || []).find(x => x.day === day);
     if (c) return { reason: c.reason || "" };
     const wd = new Date(day + "T00:00:00Z").getUTCDay();
-    if ((info.closedWeekdays || []).includes(wd)) return wd === 0 ? { sunday: true } : { reason: "" };
+    if ((info.closedWeekdays || []).includes(wd)) return { reason: "" };
     return null;
   }
   function closedText(c){
     if (!c) return "";
-    if (c.sunday) return "Sunday is by appointment only. You can still book it.";
     return `Revivv is closed that day${c.reason ? ` (${c.reason})` : ""}. You can still book it.`;
   }
   // The slots already used that day. slots_taken shows every slot as taken on a
   // closed day, so on those days look at the day's real jobs instead.
   async function takenOn(day, info){
     const closed = closedOn(day, info);
-    if (closed && !closed.sunday){
+    if (closed){
       const jobs = await rpc("staff_day", { d: day });
       return { closed, taken: new Set(jobs.filter(j => j.status !== "cancelled" && j.status !== "no_show").map(j => j.slot)) };
     }

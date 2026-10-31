@@ -84,7 +84,6 @@ export function isISODate(s) {
 }
 
 export const weekday = iso => new Date(iso + 'T00:00:00Z').getUTCDay();
-export const isSunday = iso => weekday(iso) === 0;
 
 export function addDays(iso, n) {
   const d = new Date(iso + 'T00:00:00Z');

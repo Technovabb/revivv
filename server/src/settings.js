@@ -38,7 +38,7 @@ export const DEFAULTS = {
       { id: 'afternoon', label: 'Afternoon', time: '12:00pm – 4:00pm', goldOnly: false, long: true, active: true },
       { id: 'late', label: 'Late afternoon', time: '4:00pm – 6:00pm', goldOnly: false, long: false, active: true }
     ],
-    closedWeekdays: [0],          // 0 = Sunday (by appointment: staff can still book it)
+    closedWeekdays: [1, 2, 3, 4, 5],   // open Saturday and Sunday only (0 = Sunday); staff can still book any day
     bookAheadDays: 366
   },
   business: {

@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import bcrypt from 'bcryptjs';
-import { startTestServer, client, booking, workday } from './helpers.js';
+import { startTestServer, client, booking, workday, closedDay } from './helpers.js';
 
 let t;
 before(async () => { t = await startTestServer(); });
@@ -75,9 +75,8 @@ test('a booking is priced by the server and takes the slot', async () => {
 
 test('booking rules the pages also check', async () => {
   const c = client(t.app);
-  const sunday = (() => { for (let i = 0; ; i++) { const d = workday(i); const n = new Date(d + 'T00:00:00Z'); n.setUTCDate(n.getUTCDate() + 1); const s = n.toISOString().slice(0, 10); if (new Date(s + 'T00:00:00Z').getUTCDay() === 0) return s; } })();
   const cases = [
-    [{ p_date: sunday }, /Sundays/],
+    [{ p_date: closedDay() }, /closed that day/],
     [{ p_date: '2020-01-06' }, /passed/],
     [{ p_package: 'Supreme Auto Valet', p_slot: 'late' }, /morning or afternoon/],
     [{ p_addons: 'Gold plating' }, /Unknown add-on/],

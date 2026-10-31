@@ -177,7 +177,7 @@
       slots.map(x => x.node),
       el("h3", { class: "set-sub", text: "Closed every week on" }),
       el("div", { class: "days" }, days.map(x => x.node)),
-      el("p", { class: "dim small", text: "Customers can't pick these days on the website. Sunday is by appointment: staff can still book it." }),
+      el("p", { class: "dim small", text: "Customers can't pick these days on the website. Staff can still book them." }),
       field("Take bookings up to this many days ahead", ahead, "From 7 to 366. 366 = a year.")
     ];
     const c = card("hours", "hours", "Hours", null, body, {
